@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MOOD Lounge - Pro Web DJ & Video Mixer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Orbitron', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            dj: {
+              deckA: '#00f0ff',
+              deckB: '#8b5cf6',
+              surface: '#0d0e12',
+              card: '#13151b',
+              cardBorder: '#1f222e',
+              mixer: '#0a0b0e',
+              accent: '#ef4444'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html { font-size: 13px; }
+    @media (min-width: 1536px) { html { font-size: 14px; } }
+    @media (max-height: 800px) { html { font-size: 12px; } }
+
+    body {
+      background: #000000;
+      color: #e2e8f0;
+    }
+
+    .dj-panel {
+      background: linear-gradient(180deg, #161922 0%, #0f1016 100%);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 6px 24px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .mixer-panel {
+      background: linear-gradient(180deg, #11131a 0%, #090a0e 100%);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .neon-border-a {
+      box-shadow: 0 0 16px -2px rgba(0, 240, 255, 0.25), inset 0 0 10px -2px rgba(0, 240, 255, 0.08);
+      border-color: rgba(0, 240, 255, 0.35);
+    }
+
+    .neon-border-b {
+      box-shadow: 0 0 16px -2px rgba(139, 92, 246, 0.25), inset 0 0 10px -2px rgba(139, 92, 246, 0.08);
+      border-color: rgba(139, 92, 246, 0.35);
+    }
+
+    .vu-bar { transition: height 0.08s ease; }
+
+    input[type=range].dj-fader {
+      -webkit-appearance: none;
+      appearance: none;
+      background: #000000;
+      height: 10px;
+      border-radius: 5px;
+      border: 1px solid #2d3142;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+      outline: none;
+    }
+    input[type=range].dj-fader::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 26px;
+      height: 34px;
+      background: linear-gradient(180deg, #4b5563 0%, #1f2937 50%, #111827 100%);
+      border: 2px solid #9ca3af;
+      border-radius: 4px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.4);
+      cursor: ew-resize;
+    }
+    input[type=range].dj-fader::-webkit-slider-thumb:hover { border-color: #00f0ff; }
+
+    .vertical-vol-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
+      background: #090a0e;
+      border: 1px solid #1f2230;
+      border-radius: 8px;
+      padding: 6px 4px;
+    }
+
+    input[type=range].vertical-vol {
+      writing-mode: bt-lr;
+      -webkit-appearance: slider-vertical;
+      width: 12px;
+      height: 100%;
+      min-height: 140px;
+      background: #000000;
+      border-radius: 6px;
+      outline: none;
+      cursor: ns-resize;
+    }
+
+    .scrubber-track {
+      position: relative;
+      height: 8px;
+      background: #08090d;
+      border-radius: 4px;
+      border: 1px solid #1e2230;
+      overflow: hidden;
+    }
+    .buffer-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.15);
+      width: 0%;
+      transition: width 0.3s ease;
+      z-index: 1;
+    }
+    .play-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      z-index: 2;
+      pointer-events: none;
+    }
+    input[type=range].scrubber-input {
+      -webkit-appearance: none;
+      appearance: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      outline: none;
+      z-index: 3;
+      margin: 0;
+      cursor: pointer;
+    }
+    input[type=range].scrubber-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid #000;
+      box-shadow: 0 0 6px rgba(255,255,255,0.8);
+      cursor: pointer;
+    }
+
+    .video-viewport {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000000;
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+    .video-viewport iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100% !important;
+      height: 100% !important;
+      border: none;
+    }
+
+    .logo-watermark {
+      position: absolute;
+      pointer-events: none;
+      z-index: 25;
+    }
+    .logo-watermark img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.8));
+    }
+
+    .ambient-floating-container {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 32vw !important;
+      min-width: 290px;
+      max-width: 480px;
+      display: flex !important;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 50;
+      pointer-events: none;
+      will-change: transform;
+    }
+
+    .eq-bar-wrapper {
+      display: flex;
+      justify-content: space-between;
+      gap: 5px;
+      width: 100%;
+      height: 44px;
+      padding: 0 4px;
+    }
+    
+    .eq-bar-wrapper-top { align-items: flex-end; }
+    .eq-bar-wrapper-bottom { align-items: flex-start; }
+
+    .ambient-bar {
+      flex: 1;
+      height: 8%;
+      border-radius: 3px;
+      transition: height 0.05s ease, background-color 0.8s ease, box-shadow 0.8s ease;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 6px;
+      background: #11131a;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      box-shadow: 0 14px 30px rgba(0,0,0,0.9);
+      z-index: 100;
+      min-width: 190px;
+    }
+    .dropdown-menu.show { display: block; }
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      font-size: 11px;
+      font-family: monospace;
+      color: #d1d5db;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .dropdown-item:hover { background: #1f222e; color: #fff; }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #0c0d12; }
+    ::-webkit-scrollbar-thumb { background: #262a38; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3b4259; }
+  </style>
+</head>
+<body class="min-h-screen select-none bg-black">
+
+  <!-- ========================================================
+       VISTA 1: SALIDA EXTERNA (TV / PROYECTOR)
+       ======================================================== -->
+  <div id="display-mode-root" class="hidden fixed inset-0 w-full h-full bg-black z-50 overflow-hidden flex items-center justify-center">
+    
+    <div id="extVideoLayer" class="absolute inset-0 w-full h-full bg-black">
+      <div id="extPlayer" class="w-full h-full"></div>
+    </div>
+
+    <div id="extAmbientLayer" class="hidden absolute inset-0 w-full h-full bg-black flex items-center justify-center"></div>
+
+    <div id="screenLogoBox" class="logo-watermark" style="top: 6%; left: 70%; width: 25%;">
+      <!-- Ecualizador Superior -->
+      <div id="ambientTopEQ" class="hidden eq-bar-wrapper eq-bar-wrapper-top">
+        <div id="ambTopBar-1" class="ambient-bar"></div>
+        <div id="ambTopBar-2" class="ambient-bar"></div>
+        <div id="ambTopBar-3" class="ambient-bar"></div>
+        <div id="ambTopBar-4" class="ambient-bar"></div>
+        <div id="ambTopBar-5" class="ambient-bar"></div>
+        <div id="ambTopBar-6" class="ambient-bar"></div>
+        <div id="ambTopBar-7" class="ambient-bar"></div>
+        <div id="ambTopBar-8" class="ambient-bar"></div>
+        <div id="ambTopBar-9" class="ambient-bar"></div>
+        <div id="ambTopBar-10" class="ambient-bar"></div>
+        <div id="ambTopBar-11" class="ambient-bar"></div>
+        <div id="ambTopBar-12" class="ambient-bar"></div>
+      </div>
+      
+      <img id="screenLogoImg" src="https://via.placeholder.com/250x100/000000/ef4444?text=MOOD+Lounge" alt="logo" class="w-full h-auto object-contain">
+      
+      <!-- Ecualizador Inferior -->
+      <div id="ambientBottomEQ" class="hidden eq-bar-wrapper eq-bar-wrapper-bottom">
+        <div id="ambBtmBar-1" class="ambient-bar"></div>
+        <div id="ambBtmBar-2" class="ambient-bar"></div>
+        <div id="ambBtmBar-3" class="ambient-bar"></div>
+        <div id="ambBtmBar-4" class="ambient-bar"></div>
+        <div id="ambBtmBar-5" class="ambient-bar"></div>
+        <div id="ambBtmBar-6" class="ambient-bar"></div>
+        <div id="ambBtmBar-7" class="ambient-bar"></div>
+        <div id="ambBtmBar-8" class="ambient-bar"></div>
+        <div id="ambBtmBar-9" class="ambient-bar"></div>
+        <div id="ambBtmBar-10" class="ambient-bar"></div>
+        <div id="ambBtmBar-11" class="ambient-bar"></div>
+        <div id="ambBtmBar-12" class="ambient-bar"></div>
+      </div>
+    </div>
+
+    <button id="fsBtn" onclick="toggleFullScreen()" class="fixed bottom-3 right-3 z-50 bg-black/70 hover:bg-red-600 text-red-400 hover:text-white border border-red-600/50 px-3 py-1.5 rounded-lg text-xs font-bold font-mono tracking-wider transition opacity-30 hover:opacity-100">
+      ⛶ PANTALLA COMPLETA
+    </button>
+  </div>
+
+  <!-- ========================================================
+       VISTA 2: CONSOLA PRINCIPAL DJ
+       ======================================================== -->
+  <div id="main-dj-root" class="min-h-screen p-2 sm:p-3 md:p-4 flex flex-col justify-between relative bg-black">
+    
+    <!-- TOP BAR -->
+    <header class="w-full max-w-[1680px] mx-auto mb-2.5 flex flex-wrap items-center justify-between gap-2 p-2.5 bg-neutral-900/90 backdrop-blur-md rounded-xl border border-white/5 shadow-2xl relative z-50">
+      
+      <!-- BRANDING -->
+      <div class="flex items-center gap-2.5">
+        <div class="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-red-600 via-neutral-950 to-black p-0.5 shadow-lg shadow-red-600/30">
+          <div class="w-full h-full bg-black rounded-[7px] flex items-center justify-center">
+            <i class="fa-solid fa-compact-disc text-red-500 text-xl animate-spin" style="animation-duration: 6s;"></i>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="font-display font-black text-xl tracking-wider text-red-500 drop-shadow-[0_0_12px_rgba(239,68,68,0.7)]">MOOD Lounge</h1>
+            <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-red-950 text-red-400 border border-red-800/60">PRO MIXER</span>
+          </div>
+          <p class="text-[9px] text-neutral-400 uppercase tracking-widest font-mono">Dual Deck & Dual-Mode Broadcast Station</p>
+        </div>
+      </div>
+
+      <!-- BOTONES DE CONTROL SUPERIOR (MENÚS DESPLEGABLES) -->
+      <div class="flex flex-wrap items-center gap-2 bg-black/50 p-1.5 rounded-xl border border-white/5 relative z-50">
+        
+        <!-- Menú Desplegable SALIDA -->
+        <div class="relative">
+          <button onclick="toggleDropdown('salidaMenu')" class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-display font-bold text-xs tracking-wider shadow-md flex items-center gap-2 active:scale-95 transition">
+            <i class="fa-solid fa-tv text-amber-300 text-xs"></i>
+            <span>SALIDA</span>
+            <i class="fa-solid fa-caret-down text-[10px]"></i>
+          </button>
+          <div id="salidaMenu" class="dropdown-menu">
+            <div onclick="openExternalDisplay('video'); closeAllDropdowns();" class="dropdown-item">
+              <i class="fa-solid fa-film text-cyan-400"></i> SALIDA VIDEO
+            </div>
+            <div onclick="openExternalDisplay('ambient'); closeAllDropdowns();" class="dropdown-item">
+              <i class="fa-solid fa-heart-pulse text-red-500"></i> SALIDA SIN VIDEO
+            </div>
+          </div>
+        </div>
+
+        <!-- Menú Desplegable LOGO -->
+        <div class="relative">
+          <input type="file" id="directLogoInput" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
+          <button onclick="toggleDropdown('logoMenu')" class="px-3.5 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-cyan-400 hover:text-white border border-cyan-500/30 font-display font-bold text-xs flex items-center gap-2 active:scale-95 transition">
+            <i class="fa-solid fa-image text-cyan-400 text-xs"></i>
+            <span>LOGO</span>
+            <i class="fa-solid fa-caret-down text-[10px]"></i>
+          </button>
+          <div id="logoMenu" class="dropdown-menu">
+            <div onclick="document.getElementById('directLogoInput').click(); closeAllDropdowns();" class="dropdown-item">
+              <i class="fa-solid fa-cloud-arrow-up text-cyan-400"></i> CARGAR LOGO
+            </div>
+            <div onclick="toggleLogoSettingsModal(); closeAllDropdowns();" class="dropdown-item">
+              <i class="fa-solid fa-sliders text-amber-400"></i> AJUSTAR TAMAÑO / OPACIDAD
+            </div>
+            <div onclick="removeLogo(); closeAllDropdowns();" class="dropdown-item">
+              <i class="fa-solid fa-trash-can text-red-400"></i> ELIMINAR LOGO
+            </div>
+          </div>
+        </div>
+
+        <div class="hidden xl:flex items-center gap-2 pl-2 border-l border-neutral-800 font-mono text-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span class="text-neutral-400">AUTOMIX:</span>
+          <span id="topAutomixStatusBadge" class="text-emerald-400 font-bold">ON</span>
+        </div>
+      </div>
+
+      <!-- ANCHO DE BANDA & API KEY -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-black/60 border border-white/5">
+          <i class="fa-solid fa-gauge-high text-cyan-400 text-xs"></i>
+          <div class="flex flex-col">
+            <div class="flex justify-between text-[9px] font-mono text-neutral-400 gap-1.5">
+              <span>PRECARGA</span>
+              <span id="bandwidthDisplay" class="text-cyan-400 font-bold">30%</span>
+            </div>
+            <input id="bandwidthSlider" type="range" min="10" max="100" value="30" oninput="updateBandwidthLimit(this.value)"
+                   class="w-16 accent-cyan-400 cursor-pointer h-1 bg-neutral-800 rounded">
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded-lg border border-white/5">
+          <i class="fa-solid fa-key text-neutral-500 text-[10px]"></i>
+          <input id="apiKeyInput" type="password" placeholder="YouTube API Key" 
+               class="bg-neutral-900 border border-neutral-700/80 rounded px-2 py-0.5 text-xs text-neutral-200 w-28 sm:w-36 focus:border-cyan-400 outline-none font-mono">
+          <button onclick="saveApiKey()" class="bg-cyan-500 hover:bg-cyan-400 text-black px-2.5 py-0.5 rounded text-xs font-bold transition">
+            <i class="fa-solid fa-floppy-disk"></i>
+          </button>
+          <button onclick="removeApiKey()" class="bg-neutral-800 hover:bg-red-900/60 text-neutral-400 hover:text-red-300 px-2 py-0.5 rounded text-xs transition">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- MODAL DE CONFIGURACIÓN DE LOGO -->
+    <div id="logoSettingsModal" class="hidden fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-neutral-900 border border-neutral-700 rounded-2xl max-w-md w-full p-4 shadow-2xl flex flex-col gap-3 font-sans">
+        <div class="flex justify-between items-center border-b border-neutral-800 pb-2">
+          <h3 class="font-display font-bold text-sm text-cyan-400 flex items-center gap-2">
+            <i class="fa-solid fa-sliders"></i> AJUSTES DE LOGO & MARCA DE AGUA
+          </h3>
+          <button onclick="toggleLogoSettingsModal()" class="text-neutral-400 hover:text-white text-base">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs text-neutral-300">
+            <span>Tamaño del Logo:</span>
+            <span id="logoSizeDisplay" class="font-mono text-cyan-400 font-bold">25%</span>
+          </div>
+          <input id="logoSizeSlider" type="range" min="10" max="55" value="25" oninput="updateLogoSize(this.value)"
+                 class="w-full accent-cyan-400 cursor-pointer h-1.5 bg-neutral-950 rounded">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs text-neutral-300">
+            <span>Opacidad / Transparencia:</span>
+            <span id="logoOpacityDisplay" class="font-mono text-cyan-400 font-bold">90%</span>
+          </div>
+          <input id="logoOpacitySlider" type="range" min="20" max="100" value="90" oninput="updateLogoOpacity(this.value)"
+                 class="w-full accent-cyan-400 cursor-pointer h-1.5 bg-neutral-950 rounded">
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs text-neutral-300">Ubicación rápida en pantalla (Modo con Video):</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="setLogoCorner('top-left')" class="p-1.5 bg-neutral-800 hover:bg-neutral-700 rounded text-xs border border-white/5 font-mono">↖ Arriba Izquierda</button>
+            <button onclick="setLogoCorner('top-right')" class="p-1.5 bg-neutral-800 hover:bg-neutral-700 rounded text-xs border border-white/5 font-mono text-cyan-400 font-bold">↗ Arriba Derecha (Defecto)</button>
+            <button onclick="setLogoCorner('bottom-left')" class="p-1.5 bg-neutral-800 hover:bg-neutral-700 rounded text-xs border border-white/5 font-mono">↙ Abajo Izquierda</button>
+            <button onclick="setLogoCorner('bottom-right')" class="p-1.5 bg-neutral-800 hover:bg-neutral-700 rounded text-xs border border-white/5 font-mono">↘ Abajo Derecha</button>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-neutral-800 flex justify-end">
+          <button onclick="toggleLogoSettingsModal()" class="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-black font-bold rounded-lg text-xs">
+            APLICAR Y CERRAR
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN DJ WORKSTATION: DECK A | MIXER CENTRAL | DECK B -->
+    <main class="w-full max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-2.5 mb-2.5 items-stretch relative z-10">
+      
+      <!-- DECK A -->
+      <div id="deckA-container" class="lg:col-span-5 dj-panel neon-border-a rounded-xl p-3 flex flex-col justify-between gap-2 relative overflow-hidden transition-all duration-300">
+        
+        <div class="flex justify-between items-center border-b border-white/10 pb-1.5">
+          <div class="flex items-center gap-1.5">
+            <div id="deckA-led" class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f0ff] animate-pulse"></div>
+            <span class="font-display font-black text-sm text-cyan-400 tracking-wider">DECK A</span>
+            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">CH 1</span>
+          </div>
+          <div class="flex items-center gap-1.5 overflow-hidden max-w-[210px]">
+            <i class="fa-solid fa-music text-cyan-500/70 text-xs"></i>
+            <span id="deckA-title" class="font-mono text-xs text-neutral-200 truncate font-semibold">Track Listo</span>
+          </div>
+        </div>
+
+        <!-- Video Player + Full-Height Vertical Volume Fader -->
+        <div class="grid grid-cols-12 gap-2 items-stretch">
+          <div class="col-span-10 video-viewport border border-white/10 shadow-inner">
+            <div id="playerA"></div>
+            <div id="deckA-liveTag" class="absolute top-1.5 left-1.5 bg-cyan-500 text-black font-display font-black text-[8px] px-1.5 py-0.5 rounded shadow pointer-events-none z-20">
+              ON AIR
+            </div>
+            
+            <div id="deckA-logoBox" class="logo-watermark" style="top: 6%; left: 70%; width: 25%;">
+              <img id="deckA-logoImg" src="https://via.placeholder.com/250x100/000000/ef4444?text=MOOD+Lounge" alt="logo">
+            </div>
+          </div>
+
+          <!-- Fader de Volumen Vertical -->
+          <div class="col-span-2 vertical-vol-wrapper">
+            <span id="deckA-gainText" class="text-[10px] font-mono font-black text-cyan-400">100%</span>
+            <input id="deckA-volSlider" type="range" min="0" max="100" value="100" orient="vertical" 
+                   oninput="updateDeckVolumeGain('A', this.value)" 
+                   class="vertical-vol accent-cyan-400">
+            <button id="deckA-muteBtn" onclick="toggleMuteDeck('A')" class="p-1 bg-neutral-900 hover:bg-neutral-800 text-cyan-400 rounded border border-white/10 transition" title="Silenciar / Activar">
+              <i class="fa-solid fa-volume-high text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrubber Progress Bar + Buffer + Tiempo Restante -->
+        <div class="flex flex-col gap-1 px-1 bg-black/30 p-2 rounded-lg border border-white/5">
+          <div class="scrubber-track">
+            <div id="deckA-bufferBar" class="buffer-bar" title="Caché descargado"></div>
+            <div id="deckA-playBar" class="play-bar bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_6px_#00f0ff]"></div>
+            <input id="seekA" type="range" min="0" max="100" value="0" step="0.1" 
+                 oninput="onSeekInput('A', this.value)" 
+                 onchange="onSeekChange('A', this.value)" 
+                 class="scrubber-input">
+          </div>
+          <div class="flex justify-between items-center text-[9px] font-mono">
+            <div class="flex items-center gap-1.5">
+              <span id="deckA-currentTime" class="text-cyan-400 font-bold">00:00</span>
+              <span class="text-neutral-500">/</span>
+              <span id="deckA-duration" class="text-neutral-400">00:00</span>
+            </div>
+            <span id="deckA-bufferStatus" class="text-[8px] text-neutral-400 bg-neutral-900 px-1 py-0.5 rounded border border-white/5">Búfer: 0%</span>
+            <div class="flex items-center gap-1 bg-cyan-950/40 px-1.5 py-0.5 rounded border border-cyan-500/20">
+              <span class="text-neutral-400 text-[8px]">RESTANTE:</span>
+              <span id="deckA-remainingTime" class="text-cyan-300 font-bold">-00:00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transport Controls -->
+        <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1 border-t border-white/10">
+          <div class="flex items-center gap-1.5">
+            <button onclick="cueDeck('A')" class="bg-neutral-800 hover:bg-neutral-700 border border-white/10 text-cyan-400 px-3 py-1.5 rounded-lg text-xs font-display font-black shadow active:scale-95 transition">
+              CUE
+            </button>
+            <button id="deckA-playBtn" onclick="playDeck('A')" class="bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-black px-4 py-1.5 rounded-lg text-xs font-display font-black shadow-lg shadow-cyan-500/25 active:scale-95 transition flex items-center gap-1">
+              <i class="fa-solid fa-play"></i> PLAY
+            </button>
+            <button onclick="pauseDeck('A')" class="bg-neutral-800 hover:bg-neutral-700 border border-white/10 text-neutral-200 px-3 py-1.5 rounded-lg text-xs font-display font-black shadow active:scale-95 transition">
+              <i class="fa-solid fa-pause"></i>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <button onclick="skipSeconds('A', -10)" class="bg-neutral-900 hover:bg-neutral-800 border border-white/5 px-2 py-1 rounded text-[9px] font-mono text-neutral-300 hover:text-cyan-400 transition">-10s</button>
+            <button onclick="skipSeconds('A', 10)" class="bg-neutral-900 hover:bg-neutral-800 border border-white/5 px-2 py-1 rounded text-[9px] font-mono text-neutral-300 hover:text-cyan-400 transition">+10s</button>
+            <button onclick="restartDeck('A')" class="bg-neutral-900 hover:bg-neutral-800 border border-white/5 px-2 py-1 rounded text-[9px] font-mono text-neutral-300 hover:text-cyan-400 transition"><i class="fa-solid fa-rotate-left"></i></button>
+          </div>
+
+          <div class="flex items-center gap-1 bg-black/40 px-2 py-1 rounded border border-white/5">
+            <span class="text-[8px] font-mono text-neutral-500">MASTER:</span>
+            <span id="deckA-volText" class="text-[9px] font-mono text-cyan-400 font-bold w-6 text-right">100%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTRAL MIXER -->
+      <div class="lg:col-span-2 mixer-panel rounded-xl p-3 flex flex-col justify-between items-center gap-3 relative border border-white/10">
+        
+        <div class="w-full flex flex-col items-center gap-1.5 border-b border-white/10 pb-2">
+          <span class="font-display font-black text-[11px] tracking-widest text-neutral-300">MASTER MIXER</span>
+          
+          <div class="flex gap-2 items-center justify-center p-2 rounded-lg bg-black/70 border border-white/10 w-full">
+            <div class="flex items-end gap-0.5 h-12 w-12 bg-neutral-950 p-1 rounded border border-cyan-500/20">
+              <div id="vuA-1" class="vu-bar w-full bg-cyan-500 h-[20%] rounded-sm"></div>
+              <div id="vuA-2" class="vu-bar w-full bg-cyan-400 h-[40%] rounded-sm"></div>
+              <div id="vuA-3" class="vu-bar w-full bg-teal-300 h-[60%] rounded-sm"></div>
+              <div id="vuA-4" class="vu-bar w-full bg-cyan-200 h-[30%] rounded-sm"></div>
+            </div>
+            <div class="text-[8px] font-mono text-neutral-500 font-bold">VU</div>
+            <div class="flex items-end gap-0.5 h-12 w-12 bg-neutral-950 p-1 rounded border border-indigo-500/20">
+              <div id="vuB-1" class="vu-bar w-full bg-indigo-500 h-[20%] rounded-sm"></div>
+              <div id="vuB-2" class="vu-bar w-full bg-indigo-400 h-[40%] rounded-sm"></div>
+              <div id="vuB-3" class="vu-bar w-full bg-purple-300 h-[60%] rounded-sm"></div>
+              <div id="vuB-4" class="vu-bar w-full bg-indigo-200 h-[30%] rounded-sm"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AUTOMIX ENGINE -->
+        <div class="w-full flex flex-col items-center gap-1.5 bg-neutral-950/80 p-2.5 rounded-lg border border-white/5">
+          <span class="text-[9px] font-display font-bold text-neutral-300 tracking-wider flex items-center gap-1">
+            <i class="fa-solid fa-wand-magic-sparkles text-pink-500"></i> AUTOMIX ENGINE
+          </span>
+          
+          <button id="btnAutoMix" onclick="toggleAutoMix()" class="w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-400 text-black rounded-lg font-display font-black text-xs tracking-wider shadow-lg shadow-emerald-500/30 transition-all animate-pulse">
+            AUTO-MIX ON
+          </button>
+
+          <div class="w-full flex items-center justify-between text-[9px] font-mono text-neutral-400 mt-0.5">
+            <span>TRANSICIÓN:</span>
+            <div class="flex items-center gap-1">
+              <input id="transitionDuration" type="number" value="6" min="2" max="25" 
+                     class="w-10 text-center bg-neutral-900 border border-neutral-700 rounded py-0.5 text-xs text-cyan-400 font-bold outline-none font-mono">
+              <span>SEG</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CROSSFADER -->
+        <div class="w-full flex flex-col items-center gap-1.5 mt-1">
+          <div class="flex justify-between w-full text-[9px] font-display font-bold px-1 text-neutral-400">
+            <button onclick="setFaderPosition(0)" class="hover:text-cyan-400 transition" title="Deck A 100%">[ A ]</button>
+            <button onclick="setFaderPosition(50)" class="hover:text-amber-400 transition" title="Centro (A 100% / B 100%)">[ CENTRO ]</button>
+            <button onclick="setFaderPosition(100)" class="hover:text-indigo-400 transition" title="Deck B 100%">[ B ]</button>
+          </div>
+
+          <input id="crossfader" type="range" min="0" max="100" value="0" oninput="manualCrossfade(this.value)" 
+                 class="dj-fader w-full cursor-pointer">
+
+          <div class="flex justify-between w-full text-[8px] font-mono text-neutral-500 px-1">
+            <span id="faderPctA" class="text-cyan-400 font-bold">A: 100%</span>
+            <span id="faderPctB" class="text-neutral-500">B: 0%</span>
+          </div>
+        </div>
+
+        <button onclick="triggerManualTransition()" class="w-full py-1 bg-neutral-900 hover:bg-neutral-800 text-[9px] font-mono text-neutral-300 rounded-lg border border-white/5 transition flex items-center justify-center gap-1">
+          <i class="fa-solid fa-arrows-left-right text-xs"></i> MEZCLAR AHORA
+        </button>
+      </div>
+
+      <!-- DECK B -->
+      <div id="deckB-container" class="lg:col-span-5 dj-panel neon-border-b rounded-xl p-3 flex flex-col justify-between gap-2 relative overflow-hidden transition-all duration-300 opacity-60">
+        
+        <div class="flex justify-between items-center border-b border-white/10 pb-1.5">
+          <div class="flex items-center gap-1.5">
+            <div id="deckB-led" class="w-2.5 h-2.5 rounded-full bg-neutral-700"></div>
+            <span class="font-display font-black text-sm text-indigo-400 tracking-wider">DECK B</span>
+            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">CH 2</span>
+          </div>
+          <div class="flex items-center gap-1.5 overflow-hidden max-w-[210px]">
+            <i class="fa-solid fa-music text-indigo-500/70 text-xs"></i>
+            <span id="deckB-title" class="font-mono text-xs text-neutral-200 truncate font-semibold">Track Listo</span>
+          </div>
+        </div>
+
+        <!-- Video Player + Full-Height Vertical Volume Fader -->
+        <div class="grid grid-cols-12 gap-2 items-stretch">
+          <div class="col-span-10 video-viewport border border-white/10 shadow-inner">
+            <div id="playerB"></div>
+            <div id="deckB-liveTag" class="hidden absolute top-1.5 left-1.5 bg-indigo-500 text-white font-display font-black text-[8px] px-1.5 py-0.5 rounded shadow pointer-events-none z-20">
+              ON AIR
+            </div>
+            
+            <div id="deckB-logoBox" class="logo-watermark" style="top: 6%; left: 70%; width: 25%;">
+              <img id="deckB-logoImg" src="https://via.placeholder.com/250x100/000000/ef4444?text=MOOD+Lounge" alt="logo">
+            </div>
+          </div>
+
+          <!-- Fader de Volumen Vertical -->
+          <div class="col-span-2 vertical-vol-wrapper">
+            <span id="deckB-gainText" class="text-[10px] font-mono font-black text-indigo-400">100%</span>
+            <input id="deckB-volSlider" type="range" min="0" max="100" value="100" orient="vertical" 
+                   oninput="updateDeckVolumeGain('B', this.value)" 
+                   class="vertical-vol accent-indigo-400">
+            <button id="deckB-muteBtn" onclick="toggleMuteDeck('B')" class="p-1 bg-neutral-900 hover:bg-neutral-800 text-indigo-400 rounded border border-white/10 transition" title="Silenciar / Activar">
+              <i class="fa-solid fa-volume-high text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrubber Progress Bar + Buffer + Tiempo Restante -->
+        <div class="flex flex-col gap-1 px-1 bg-black/30 p-2 rounded-lg border border-white/5">
+          <div class="scrubber-track">
+            <div id="deckB-bufferBar" class="buffer-bar" title="Caché descargado"></div>
+            <div id="deckB-playBar" class="play-bar bg-gradient-to-r from-indigo-600 to-indigo-400 shadow-[0_0_8px_#8b5cf6]"></div>
+            <input id="seekB" type="range" min="0" max="100" value="0" step="0.1" 
+                 oninput="onSeekInput('B', this.value)" 
+                 onchange="onSeekChange('B', this.value)" 
+                 class="scrubber-input">
+          </div>
+          <div class="flex justify-between items-center text-[9px] font-mono">
+            <div class="flex items-center gap-1.5">
+              <span id="deckB-currentTime" class="text-indigo-400 font-bold">00:00</span>
+              <span class="text-neutral-500">/</span>
+              <span id="deckB-duration" class="text-neutral-400">00:00</span>
+            </div>
+            <span id="deckB-bufferStatus" class="text-[8px] text-neutral-400 bg-neutral-900 px-1 py-0.5 rounded border border-white/5">Búfer: 0%</span>
+            <div class="flex items-center gap-1 bg-indigo-950/40 px-1.5 py-0.5 rounded border border-indigo-500/20">
+              <span class="text-neutral-400 text-[8px]">RESTANTE:</span>
+              <span id="deckB-remainingTime" class="text-indigo-300 font-bold">-00:00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transport Controls -->
+        <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1 border-t border-white/10">
+          <div class="flex items-center gap-1.5">
+            <button onclick="cueDeck('B')" class="bg-neutral-800 hover:bg-neutral-700 border border-white/10 text-indigo-400 px-3 py-1.5 rounded-lg text-xs font-display font-black shadow active:scale-95 transition">
+              CUE
+            </button>
+            <button id="deckB-playBtn" onclick="playDeck('B')" class="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white px-4 py-1.5 rounded-lg text-xs font-display font-black shadow-lg shadow-indigo-500/25 active:scale-95 transition flex items-center gap-1">
+              <i class="fa-solid fa-play"></i> PLAY
+            </button>
+            <button onclick="pauseDeck('B')" class="bg-neutral-800 hover:bg-neutral-700 border border-white/10 text-neutral-200 px-3 py-1.5 rounded-lg text-xs font-display font-black shadow active:scale-95 transition">
+              <i class="fa-solid fa-pause"></i>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <button onclick="skipSeconds('B', -10)" class="bg-neutral-900 hover:bg-neutral-800 border border-white/5 px-2 py-1 rounded text-[9px] font-mono text-neutral-300 hover:text-indigo-400 transition">-10s</button>
+            <button onclick="skipSeconds('B', 10)" class="bg-neutral-900 hover:bg-neutral-800 border border-white/5 px-2 py-1 rounded text-[9px] font-mono text-neutral-300 hover:text-indigo-400 transition">+10s</button>
+            <button onclick="restartDeck('B')" class="bg-neutral-900 hover:bg-neutral-800 border border-white/5 px-2 py-1 rounded text-[9px] font-mono text-neutral-300 hover:text-indigo-400 transition"><i class="fa-solid fa-rotate-left"></i></button>
+          </div>
+
+          <div class="flex items-center gap-1 bg-black/40 px-2 py-1 rounded border border-white/5">
+            <span class="text-[8px] font-mono text-neutral-500">MASTER:</span>
+            <span id="deckB-volText" class="text-[9px] font-mono text-indigo-400 font-bold w-6 text-right">0%</span>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- LOWER PANEL: SEARCH & PLAYLIST & QUEUE -->
+    <section class="w-full max-w-[1680px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-2.5">
+      
+      <div class="lg:col-span-7 dj-panel rounded-xl p-3 flex flex-col gap-2.5">
+        
+        <div class="flex items-center justify-between border-b border-white/10 pb-2">
+          <div class="flex items-center gap-1.5">
+            <button id="tabSearchBtn" onclick="switchInputTab('search')" class="px-3 py-1 rounded-lg font-display font-bold text-xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-magnifying-glass"></i> BUSCAR CANCIONES
+            </button>
+            <button id="tabPlaylistBtn" onclick="switchInputTab('playlist')" class="px-3 py-1 rounded-lg font-display font-bold text-xs bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-white/5 flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-list-check text-pink-500"></i> IMPORTAR PLAYLIST
+            </button>
+          </div>
+          <span id="searchStatus" class="text-[9px] font-mono text-neutral-400"></span>
+        </div>
+
+        <form id="searchForm" onsubmit="searchYouTube(event)" class="flex gap-2">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-xs"></i>
+            <input id="searchInput" type="text" placeholder="Buscar artista, canción, remix..." 
+                 class="w-full bg-neutral-950 border border-neutral-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-neutral-100 outline-none focus:border-cyan-400 transition font-sans">
+          </div>
+          <button type="submit" class="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-display font-bold px-4 py-1.5 rounded-lg text-xs tracking-wider shadow-md shadow-red-600/20 active:scale-95 transition flex items-center gap-1">
+            <i class="fa-solid fa-search"></i> BUSCAR
+          </button>
+        </form>
+
+        <form id="playlistForm" onsubmit="importYouTubePlaylist(event)" class="hidden flex gap-2">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-link absolute left-3 top-1/2 -translate-y-1/2 text-pink-500 text-xs"></i>
+            <input id="playlistUrlInput" type="text" placeholder="Pega el enlace o ID de la playlist (Ej: https://www.youtube.com/playlist?list=PL...)" 
+                 class="w-full bg-neutral-950 border border-neutral-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-neutral-100 outline-none focus:border-pink-500 transition font-sans">
+          </div>
+          <button type="submit" class="bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-500 hover:to-pink-400 text-white font-display font-bold px-4 py-1.5 rounded-lg text-xs tracking-wider shadow-md shadow-pink-600/20 active:scale-95 transition flex items-center gap-1">
+            <i class="fa-solid fa-cloud-arrow-down"></i> CARGAR PLAYLIST
+          </button>
+        </form>
+
+        <div id="searchResults" class="overflow-y-auto max-h-52 flex flex-col gap-1.5 pr-1">
+          <div class="text-center py-6 text-neutral-500 font-mono text-xs flex flex-col items-center gap-1.5">
+            <i class="fa-solid fa-headphones text-xl text-neutral-600"></i>
+            <span>Busca canciones o pega el enlace de una playlist para agregarlas a la cola Automix.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- COLA AUTOMIX -->
+      <div class="lg:col-span-5 dj-panel rounded-xl p-3 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between border-b border-white/10 pb-2">
+          <div class="flex items-center gap-1.5">
+            <i class="fa-solid fa-list-ol text-cyan-400"></i>
+            <h2 class="font-display font-bold text-xs tracking-wide text-cyan-400">COLA AUTOMIX</h2>
+            <span id="queueCount" class="text-xs font-mono font-bold px-1.5 py-0.2 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">0</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="shuffleQueue()" class="text-[10px] font-mono text-neutral-400 hover:text-cyan-300 flex items-center gap-1 transition" title="Mezclar aleatoriamente">
+              <i class="fa-solid fa-shuffle"></i> Shuffle
+            </button>
+            <button onclick="clearQueue()" class="text-[10px] font-mono text-red-400 hover:text-red-300 flex items-center gap-1 transition" title="Vaciar toda la cola">
+              <i class="fa-solid fa-trash"></i> Limpiar
+            </button>
+          </div>
+        </div>
+
+        <div id="queueContainer" class="overflow-y-auto max-h-52 flex flex-col gap-1.5 pr-1"></div>
+      </div>
+
+    </section>
+  </div>
+
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    let playerA, playerB, extPlayer;
+    let autoMixActive = true; 
+    let monitorInterval = null;
+    let activeDeck = 'A';
+    let isTransitioning = false;
+    let isSeekingA = false;
+    let isSeekingB = false;
+    let bandwidthPercent = 30;
+
+    let deckGainA = 100;
+    let deckGainB = 100;
+    let isMutedA = false;
+    let isMutedB = false;
+
+    let currentVideoIdA = 'kJQP7kiw5Fk';
+    let currentVideoIdB = 'fJ9rUzIMcZQ';
+
+    const DEFAULT_LOGO = 'https://via.placeholder.com/250x100/000000/ef4444?text=MOOD+Lounge';
+    let logoData = {
+      src: localStorage.getItem('moodj_logo_src') || DEFAULT_LOGO,
+      size: parseInt(localStorage.getItem('moodj_logo_size')) || 25,
+      opacity: parseFloat(localStorage.getItem('moodj_logo_opacity')) || 0.9,
+      topPercent: parseFloat(localStorage.getItem('moodj_logo_top')) || 6,
+      leftPercent: parseFloat(localStorage.getItem('moodj_logo_left')) || 70
+    };
+
+    const displayBroadcast = ('BroadcastChannel' in window) ? new BroadcastChannel('moodj_video_screen') : null;
+    const STORAGE_KEY_API = 'moodj_pro_api_key';
+    const STORAGE_KEY_QUEUE = 'moodj_pro_queue_cache';
+    const STORAGE_KEY_BW = 'moodj_pro_bandwidth_cache';
+
+    let playlistQueue = JSON.parse(localStorage.getItem(STORAGE_KEY_QUEUE)) || [];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const isDisplayMode = urlParams.get('mode') === 'display';
+    let displayVisualMode = urlParams.get('type') || 'video';
+
+    // Paletas Dinámicas Simétricas (Arcoíris, Blanco, Tonos Monocromáticos)
+    const COLOR_THEMES = [
+      ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#0284c7', '#6366f1', '#8b5cf6', '#d946ef', '#ec4899', '#f43f5e'],
+      ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff'],
+      ['#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8', '#0ea5e9', '#0284c7', '#0369a1', '#00f0ff', '#38bdf8', '#7dd3fc', '#bae6fd', '#e0f2fe'],
+      ['#fdf4ff', '#fae8ff', '#f5d0fe', '#f0abfc', '#e879f9', '#d946ef', '#c026d3', '#a21caf', '#8b5cf6', '#c084fc', '#e879f9', '#fae8ff'],
+      ['#fef2f2', '#fee2e2', '#fca5a5', '#f87171', '#ef4444', '#dc2626', '#f59e0b', '#fbbf24', '#fde047', '#f59e0b', '#dc2626', '#ef4444']
+    ];
+    let currentThemeIndex = 0;
+
+    // Velocidad ultra lenta para el screensaver anti-quemado
+    let posX = 0;
+    let posY = 0;
+    let velX = 0.15;
+    let velY = 0.12;
+    let bounceInterval = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (isDisplayMode) {
+        document.getElementById('main-dj-root').classList.add('hidden');
+        document.getElementById('display-mode-root').classList.remove('hidden');
+        document.title = "MOOD Lounge - Salida Externa";
+        applyDisplayModeLayout(displayVisualMode);
+        applyLogoStyles();
+        setupDisplayReceiver();
+        startAmbientThemeRotator();
+      } else {
+        loadSavedSettings();
+        renderQueue();
+        startVuMeterSimulator();
+        startAutoMixMonitor();
+        applyLogoStyles();
+        startContinuousFrameLockSync();
+      }
+      startSymmetricAmbientVisualizer();
+    });
+
+    function startAmbientThemeRotator() {
+      setInterval(() => {
+        currentThemeIndex = (currentThemeIndex + 1) % COLOR_THEMES.length;
+      }, 7000);
+    }
+
+    // Motor de Deriva Ultra Lenta
+    function startAntiBurnBounce() {
+      if (bounceInterval) clearInterval(bounceInterval);
+      
+      const w = window.innerWidth || 1280;
+      const h = window.innerHeight || 720;
+      posX = Math.max(30, (w * 0.35));
+      posY = Math.max(30, (h * 0.35));
+      velX = 0.15;
+      velY = 0.12;
+
+      bounceInterval = setInterval(() => {
+        if (displayVisualMode !== 'ambient') return;
+
+        const box = document.getElementById('screenLogoBox');
+        if (!box) return;
+
+        const boxWidth = box.offsetWidth || 380;
+        const boxHeight = box.offsetHeight || 190;
+        const maxX = window.innerWidth - boxWidth - 25;
+        const maxY = window.innerHeight - boxHeight - 25;
+        const minX = 25;
+        const minY = 25;
+
+        posX += velX;
+        posY += velY;
+
+        if (posX >= maxX) { posX = maxX; velX = -Math.abs(velX); }
+        if (posX <= minX) { posX = minX; velX = Math.abs(velX); }
+        if (posY >= maxY) { posY = maxY; velY = -Math.abs(velY); }
+        if (posY <= minY) { posY = minY; velY = Math.abs(velY); }
+
+        box.style.transform = `translate3d(${posX}px, ${posY}px, 0)`;
+      }, 25);
+    }
+
+    window.addEventListener('click', (e) => {
+      if (!e.target.closest('header')) {
+        closeAllDropdowns();
+      }
+    });
+
+    function toggleDropdown(menuId) {
+      const menu = document.getElementById(menuId);
+      const isOpen = menu.classList.contains('show');
+      closeAllDropdowns();
+      if (!isOpen) menu.classList.add('show');
+    }
+
+    function closeAllDropdowns() {
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+    }
+
+    function applyDisplayModeLayout(mode) {
+      displayVisualMode = mode;
+      const videoLayer = document.getElementById('extVideoLayer');
+      const ambientLayer = document.getElementById('extAmbientLayer');
+      const logoBox = document.getElementById('screenLogoBox');
+      const ambientTopEQ = document.getElementById('ambientTopEQ');
+      const ambientBottomEQ = document.getElementById('ambientBottomEQ');
+
+      if (mode === 'ambient') {
+        if (videoLayer) videoLayer.classList.add('opacity-0', 'pointer-events-none');
+        if (ambientLayer) ambientLayer.classList.remove('hidden');
+        if (ambientTopEQ) ambientTopEQ.classList.remove('hidden');
+        if (ambientBottomEQ) ambientBottomEQ.classList.remove('hidden');
+        if (logoBox) {
+          logoBox.className = 'ambient-floating-container';
+          logoBox.style.width = '30vw';
+          logoBox.style.display = 'flex';
+          startAntiBurnBounce();
+        }
+      } else {
+        if (bounceInterval) clearInterval(bounceInterval);
+        if (videoLayer) videoLayer.classList.remove('opacity-0', 'pointer-events-none');
+        if (ambientLayer) ambientLayer.classList.add('hidden');
+        if (ambientTopEQ) ambientTopEQ.classList.add('hidden');
+        if (ambientBottomEQ) ambientBottomEQ.classList.add('hidden');
+        if (logoBox) {
+          logoBox.className = 'logo-watermark';
+          logoBox.style.transform = 'none';
+          logoBox.style.top = `${logoData.topPercent}%`;
+          logoBox.style.left = `${logoData.leftPercent}%`;
+          logoBox.style.width = `${logoData.size}%`;
+        }
+      }
+    }
+
+    // --- VISUALIZADOR SIMÉTRICO DIRECTAMENTE SINCRONIZADO A LOS BEATS ---
+    function startSymmetricAmbientVisualizer() {
+      let beatAngle = 0;
+
+      setInterval(() => {
+        const isPlayingExt = extPlayer && extPlayer.getPlayerState && extPlayer.getPlayerState() === YT.PlayerState.PLAYING;
+        const isPlayingA = playerA && playerA.getPlayerState && playerA.getPlayerState() === YT.PlayerState.PLAYING;
+        const isPlayingB = playerB && playerB.getPlayerState && playerB.getPlayerState() === YT.PlayerState.PLAYING;
+        const isPlaying = isDisplayMode ? isPlayingExt : (isPlayingA || isPlayingB);
+
+        const currentColors = COLOR_THEMES[currentThemeIndex];
+        
+        let kickPeak = 0;
+        if (isPlaying) {
+          beatAngle += 0.22;
+          kickPeak = Math.pow(Math.sin(beatAngle), 4);
+        } else {
+          beatAngle = 0;
+          kickPeak = 0;
+        }
+
+        for (let i = 1; i <= 12; i++) {
+          const topBar = document.getElementById(`ambTopBar-${i}`);
+          const btmBar = document.getElementById(`ambBtmBar-${i}`);
+          const barColor = currentColors[(i - 1) % currentColors.length];
+
+          const isBassBar = (i <= 4 || i >= 9);
+          const energy = isBassBar ? (kickPeak * 68 + Math.random() * 22) : (Math.random() * 45 + kickPeak * 25);
+          const barHeight = isPlaying ? Math.min(100, Math.max(10, energy)) : 8;
+
+          if (topBar) {
+            topBar.style.backgroundColor = barColor;
+            topBar.style.boxShadow = isPlaying ? `0 0 10px ${barColor}` : 'none';
+            topBar.style.height = `${barHeight}%`;
+          }
+
+          if (btmBar) {
+            btmBar.style.backgroundColor = barColor;
+            btmBar.style.boxShadow = isPlaying ? `0 0 10px ${barColor}` : 'none';
+            btmBar.style.height = `${barHeight}%`;
+          }
+        }
+      }, 55);
+    }
+
+    function setupDisplayReceiver() {
+      if (displayBroadcast) {
+        displayBroadcast.onmessage = (e) => {
+          if (!extPlayer) return;
+          if (e.data.action === 'changeVideo') {
+            extPlayer.loadVideoById(e.data.videoId);
+          } else if (e.data.action === 'seek') {
+            extPlayer.seekTo(e.data.seconds, true);
+          } else if (e.data.action === 'play') {
+            extPlayer.playVideo();
+          } else if (e.data.action === 'pause') {
+            extPlayer.pauseVideo();
+          } else if (e.data.action === 'switchMode') {
+            applyDisplayModeLayout(e.data.mode);
+          } else if (e.data.action === 'timeSync' && extPlayer.getCurrentTime) {
+            const extTime = extPlayer.getCurrentTime();
+            if (Math.abs(extTime - e.data.seconds) > 0.6) {
+              extPlayer.seekTo(e.data.seconds, true);
+            }
+            if (e.data.state === 1 && extPlayer.getPlayerState() !== 1) {
+              extPlayer.playVideo();
+            } else if (e.data.state === 2 && extPlayer.getPlayerState() !== 2) {
+              extPlayer.pauseVideo();
+            }
+          } else if (e.data.action === 'updateLogo') {
+            logoData = e.data.logo;
+            applyLogoStyles();
+          }
+        };
+      }
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {});
+        document.getElementById('fsBtn').style.display = 'none';
+      }
+    }
+
+    function onYouTubeIframeAPIReady() {
+      if (isDisplayMode) {
+        const vid = urlParams.get('vid') || currentVideoIdA;
+        extPlayer = new YT.Player('extPlayer', {
+          height: '100%',
+          width: '100%',
+          videoId: vid,
+          playerVars: { 
+            autoplay: 1, 
+            controls: 0, 
+            modestbranding: 1, 
+            rel: 0, 
+            playsinline: 1,
+            enablejsapi: 1,
+            origin: window.location.origin
+          },
+          events: {
+            'onReady': () => {
+              extPlayer.mute();
+              extPlayer.playVideo();
+            }
+          }
+        });
+      } else {
+        playerA = new YT.Player('playerA', {
+          height: '100%',
+          width: '100%',
+          videoId: currentVideoIdA,
+          playerVars: { 
+            autoplay: 0, 
+            controls: 0, 
+            modestbranding: 1, 
+            rel: 0, 
+            playsinline: 1,
+            enablejsapi: 1,
+            origin: window.location.origin
+          },
+          events: { 
+            'onReady': () => {
+              applyMasterCrossfade(parseFloat(document.getElementById('crossfader').value));
+              startPlaybackTracker();
+            },
+            'onStateChange': (e) => handlePlayerState('A', e)
+          }
+        });
+
+        playerB = new YT.Player('playerB', {
+          height: '100%',
+          width: '100%',
+          videoId: currentVideoIdB,
+          playerVars: { 
+            autoplay: 0, 
+            controls: 0, 
+            modestbranding: 1, 
+            rel: 0, 
+            playsinline: 1,
+            enablejsapi: 1,
+            origin: window.location.origin
+          },
+          events: { 
+            'onReady': () => {
+              applyMasterCrossfade(parseFloat(document.getElementById('crossfader').value));
+              if (playerB && playerB.pauseVideo) playerB.pauseVideo();
+            },
+            'onStateChange': (e) => handlePlayerState('B', e)
+          }
+        });
+      }
+    }
+
+    function openExternalDisplay(modeType) {
+      const activeVideoId = activeDeck === 'A' ? currentVideoIdA : currentVideoIdB;
+      const url = `${window.location.origin}${window.location.pathname}?mode=display&type=${modeType}&vid=${activeVideoId}`;
+      const left = window.screen.width ? window.screen.width : 1366;
+      window.open(url, 'MOOD_Lounge_Display', `width=1280,height=720,left=${left},top=0,menubar=no,toolbar=no,location=no,status=no`);
+      syncExternalScreen('switchMode', { mode: modeType });
+      closeAllDropdowns();
+    }
+
+    function syncExternalScreen(action, data) {
+      if (displayBroadcast) {
+        displayBroadcast.postMessage({ action, ...data });
+      }
+    }
+
+    function startContinuousFrameLockSync() {
+      setInterval(() => {
+        const livePlayer = activeDeck === 'A' ? playerA : playerB;
+        if (livePlayer && typeof livePlayer.getCurrentTime === 'function') {
+          const currentTime = livePlayer.getCurrentTime();
+          const playerState = livePlayer.getPlayerState ? livePlayer.getPlayerState() : 1;
+          syncExternalScreen('timeSync', { seconds: currentTime, state: playerState });
+        }
+      }, 350);
+    }
+
+    function updateBandwidthLimit(val) {
+      bandwidthPercent = parseInt(val);
+      document.getElementById('bandwidthDisplay').textContent = `${bandwidthPercent}%`;
+      localStorage.setItem(STORAGE_KEY_BW, bandwidthPercent);
+      applyQualityPolicy();
+    }
+
+    function applyQualityPolicy() {
+      const standbyPlayer = activeDeck === 'A' ? playerB : playerA;
+      if (standbyPlayer && standbyPlayer.setPlaybackQuality) {
+        const quality = bandwidthPercent <= 35 ? 'small' : (bandwidthPercent <= 70 ? 'medium' : 'hd720');
+        standbyPlayer.setPlaybackQuality(quality);
+      }
+    }
+
+    function handleLogoUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          logoData.src = evt.target.result;
+          localStorage.setItem('moodj_logo_src', logoData.src);
+          applyLogoStyles();
+        };
+        reader.readAsDataURL(file);
+      }
+      closeAllDropdowns();
+    }
+
+    function removeLogo() {
+      logoData.src = '';
+      localStorage.removeItem('moodj_logo_src');
+      applyLogoStyles();
+      closeAllDropdowns();
+    }
+
+    function applyLogoStyles() {
+      const boxes = [
+        document.getElementById('deckA-logoBox'), 
+        document.getElementById('deckB-logoBox'),
+        document.getElementById('screenLogoBox')
+      ];
+      const imgs = [
+        document.getElementById('deckA-logoImg'), 
+        document.getElementById('deckB-logoImg'),
+        document.getElementById('screenLogoImg')
+      ];
+
+      boxes.forEach(el => {
+        if (el) {
+          if (!logoData.src) {
+            el.style.display = 'none';
+          } else {
+            if (el.id === 'screenLogoBox' && displayVisualMode === 'ambient') {
+              el.style.display = 'flex';
+              el.style.width = '30vw';
+            } else {
+              el.style.display = 'block';
+              el.style.width = `${logoData.size}%`;
+              el.style.top = `${logoData.topPercent}%`;
+              el.style.left = `${logoData.leftPercent}%`;
+            }
+            el.style.opacity = logoData.opacity;
+          }
+        }
+      });
+
+      imgs.forEach(img => {
+        if (img && logoData.src) {
+          img.src = logoData.src;
+          img.style.display = 'block';
+        } else if (img) {
+          img.style.display = 'none';
+        }
+      });
+
+      const sizeSlider = document.getElementById('logoSizeSlider');
+      if (sizeSlider) {
+        sizeSlider.value = logoData.size;
+        document.getElementById('logoSizeDisplay').textContent = `${logoData.size}%`;
+        document.getElementById('logoOpacitySlider').value = logoData.opacity * 100;
+        document.getElementById('logoOpacityDisplay').textContent = `${Math.round(logoData.opacity * 100)}%`;
+      }
+
+      syncExternalScreen('updateLogo', { logo: logoData });
+    }
+
+    function updateLogoSize(val) {
+      logoData.size = parseInt(val);
+      localStorage.setItem('moodj_logo_size', logoData.size);
+      applyLogoStyles();
+    }
+
+    function updateLogoOpacity(val) {
+      logoData.opacity = parseFloat(val) / 100;
+      localStorage.setItem('moodj_logo_opacity', logoData.opacity);
+      applyLogoStyles();
+    }
+
+    function setLogoCorner(corner) {
+      if (corner === 'top-left') {
+        logoData.topPercent = 6; logoData.leftPercent = 4;
+      } else if (corner === 'top-right') {
+        logoData.topPercent = 6; logoData.leftPercent = 100 - logoData.size - 6;
+      } else if (corner === 'bottom-left') {
+        logoData.topPercent = 75; logoData.leftPercent = 4;
+      } else if (corner === 'bottom-right') {
+        logoData.topPercent = 75; logoData.leftPercent = 100 - logoData.size - 6;
+      }
+      localStorage.setItem('moodj_logo_top', logoData.topPercent);
+      localStorage.setItem('moodj_logo_left', logoData.leftPercent);
+      applyLogoStyles();
+    }
+
+    function toggleLogoSettingsModal() {
+      const modal = document.getElementById('logoSettingsModal');
+      if (modal) modal.classList.toggle('hidden');
+    }
+
+    function handlePlayerState(deck, event) {
+      if (event.data === YT.PlayerState.ENDED && autoMixActive && !isTransitioning) {
+        executeTransition(activeDeck === 'A' ? 'B' : 'A', 2);
+      }
+    }
+
+    function startVuMeterSimulator() {
+      setInterval(() => {
+        const isPlayingA = playerA && playerA.getPlayerState && playerA.getPlayerState() === YT.PlayerState.PLAYING;
+        const isPlayingB = playerB && playerB.getPlayerState && playerB.getPlayerState() === YT.PlayerState.PLAYING;
+        
+        const faderVal = parseFloat(document.getElementById('crossfader').value);
+        let volA = faderVal <= 50 ? 1 : ((100 - faderVal) / 50);
+        let volB = faderVal >= 50 ? 1 : (faderVal / 50);
+
+        volA = (volA * (deckGainA / 100)) * (isMutedA ? 0 : 1);
+        volB = (volB * (deckGainB / 100)) * (isMutedB ? 0 : 1);
+
+        for (let i = 1; i <= 4; i++) {
+          const el = document.getElementById(`vuA-${i}`);
+          if (el) {
+            const h = isPlayingA && volA > 0 ? Math.min(100, Math.max(15, (Math.random() * 75 + 25) * volA)) : 10;
+            el.style.height = `${h}%`;
+          }
+        }
+
+        for (let i = 1; i <= 4; i++) {
+          const el = document.getElementById(`vuB-${i}`);
+          if (el) {
+            const h = isPlayingB && volB > 0 ? Math.min(100, Math.max(15, (Math.random() * 75 + 25) * volB)) : 10;
+            el.style.height = `${h}%`;
+          }
+        }
+      }, 90);
+    }
+
+    function formatTime(seconds) {
+      if (isNaN(seconds) || seconds < 0) return "00:00";
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function startPlaybackTracker() {
+      setInterval(() => {
+        try {
+          if (playerA && typeof playerA.getCurrentTime === 'function') {
+            const curA = playerA.getCurrentTime() || 0;
+            const durA = playerA.getDuration() || 0;
+            const remainingA = Math.max(0, durA - curA);
+            const loadedFractionA = playerA.getVideoLoadedFraction ? playerA.getVideoLoadedFraction() : 0;
+            
+            document.getElementById('deckA-currentTime').textContent = formatTime(curA);
+            document.getElementById('deckA-duration').textContent = formatTime(durA);
+            document.getElementById('deckA-remainingTime').textContent = `-${formatTime(remainingA)}`;
+            
+            const bufferPctA = (loadedFractionA * 100).toFixed(0);
+            document.getElementById('deckA-bufferBar').style.width = `${bufferPctA}%`;
+            document.getElementById('deckA-bufferStatus').textContent = `Búfer: ${bufferPctA}%`;
+
+            if (durA > 0 && !isSeekingA) {
+              const playPctA = (curA / durA) * 100;
+              document.getElementById('deckA-playBar').style.width = `${playPctA}%`;
+              document.getElementById('seekA').value = playPctA;
+            }
+          }
+
+          if (playerB && typeof playerB.getCurrentTime === 'function') {
+            const curB = playerB.getCurrentTime() || 0;
+            const durB = playerB.getDuration() || 0;
+            const remainingB = Math.max(0, durB - curB);
+            const loadedFractionB = playerB.getVideoLoadedFraction ? playerB.getVideoLoadedFraction() : 0;
+
+            document.getElementById('deckB-currentTime').textContent = formatTime(curB);
+            document.getElementById('deckB-duration').textContent = formatTime(durB);
+            document.getElementById('deckB-remainingTime').textContent = `-${formatTime(remainingB)}`;
+
+            const bufferPctB = (loadedFractionB * 100).toFixed(0);
+            document.getElementById('deckB-bufferBar').style.width = `${bufferPctB}%`;
+            document.getElementById('deckB-bufferStatus').textContent = `Búfer: ${bufferPctB}%`;
+
+            if (durB > 0 && !isSeekingB) {
+              const playPctB = (curB / durB) * 100;
+              document.getElementById('deckB-playBar').style.width = `${playPctB}%`;
+              document.getElementById('seekB').value = playPctB;
+            }
+          }
+        } catch (e) {}
+      }, 250);
+    }
+
+    function onSeekInput(deck, percentage) {
+      if (deck === 'A') isSeekingA = true;
+      if (deck === 'B') isSeekingB = true;
+
+      const player = deck === 'A' ? playerA : playerB;
+      if (player && player.getDuration) {
+        const targetSeconds = (percentage / 100) * player.getDuration();
+        document.getElementById(`deck${deck}-currentTime`).textContent = formatTime(targetSeconds);
+        document.getElementById(`deck${deck}-playBar`).style.width = `${percentage}%`;
+        if (deck === activeDeck) syncExternalScreen('seek', { seconds: targetSeconds });
+      }
+    }
+
+    function onSeekChange(deck, percentage) {
+      const player = deck === 'A' ? playerA : playerB;
+      if (player && player.getDuration) {
+        const targetSeconds = (percentage / 100) * player.getDuration();
+        player.seekTo(targetSeconds, true);
+        if (deck === activeDeck) syncExternalScreen('seek', { seconds: targetSeconds });
+      }
+      setTimeout(() => {
+        if (deck === 'A') isSeekingA = false;
+        if (deck === 'B') isSeekingB = false;
+      }, 300);
+    }
+
+    function skipSeconds(deck, seconds) {
+      const player = deck === 'A' ? playerA : playerB;
+      if (player && player.getCurrentTime) {
+        const current = player.getCurrentTime();
+        const duration = player.getDuration();
+        let target = Math.max(0, Math.min(duration, current + seconds));
+        player.seekTo(target, true);
+        if (deck === activeDeck) syncExternalScreen('seek', { seconds: target });
+      }
+    }
+
+    function restartDeck(deck) {
+      const player = deck === 'A' ? playerA : playerB;
+      if (player && player.seekTo) {
+        player.seekTo(0, true);
+        if (deck === activeDeck) syncExternalScreen('seek', { seconds: 0 });
+      }
+    }
+
+    function playDeck(deck) {
+      const player = deck === 'A' ? playerA : playerB;
+      if (player && player.playVideo) {
+        player.unMute();
+        player.playVideo();
+        applyMasterCrossfade(parseFloat(document.getElementById('crossfader').value));
+        if (deck === activeDeck) {
+          const videoId = deck === 'A' ? currentVideoIdA : currentVideoIdB;
+          syncExternalScreen('changeVideo', { videoId });
+          syncExternalScreen('play', {});
+        }
+      }
+    }
+
+    function pauseDeck(deck) {
+      const player = deck === 'A' ? playerA : playerB;
+      if (player && player.pauseVideo) {
+        player.pauseVideo();
+        if (deck === activeDeck) syncExternalScreen('pause', {});
+      }
+    }
+
+    function cueDeck(deck) {
+      const player = deck === 'A' ? playerA : playerB;
+      if (player && player.seekTo) {
+        player.seekTo(0);
+        player.pauseVideo();
+        if (deck === activeDeck) {
+          syncExternalScreen('seek', { seconds: 0 });
+          syncExternalScreen('pause', {});
+        }
+      }
+    }
+
+    function loadDirectly(deck, videoId, title) {
+      document.getElementById(`deck${deck}-title`).textContent = title;
+      if (deck === 'A') currentVideoIdA = videoId;
+      if (deck === 'B') currentVideoIdB = videoId;
+
+      const player = deck === 'A' ? playerA : playerB;
+      if (player) {
+        if (deck === activeDeck) {
+          if (player.loadVideoById) player.loadVideoById(videoId);
+          syncExternalScreen('changeVideo', { videoId });
+        } else {
+          if (player.cueVideoById) {
+            player.cueVideoById(videoId);
+          } else if (player.loadVideoById) {
+            player.loadVideoById(videoId);
+            setTimeout(() => { if (player.pauseVideo) player.pauseVideo(); }, 150);
+          }
+        }
+      }
+
+      applyMasterCrossfade(parseFloat(document.getElementById('crossfader').value));
+      applyQualityPolicy();
+    }
+
+    function updateDeckVolumeGain(deck, val) {
+      if (deck === 'A') {
+        deckGainA = parseFloat(val);
+        document.getElementById('deckA-gainText').textContent = `${Math.round(deckGainA)}%`;
+      } else {
+        deckGainB = parseFloat(val);
+        document.getElementById('deckB-gainText').textContent = `${Math.round(deckGainB)}%`;
+      }
+      applyMasterCrossfade(parseFloat(document.getElementById('crossfader').value));
+    }
+
+    function toggleMuteDeck(deck) {
+      if (deck === 'A') {
+        isMutedA = !isMutedA;
+        const btn = document.getElementById('deckA-muteBtn');
+        btn.innerHTML = isMutedA ? '<i class="fa-solid fa-volume-xmark text-red-500 text-xs"></i>' : '<i class="fa-solid fa-volume-high text-cyan-400 text-xs"></i>';
+      } else {
+        isMutedB = !isMutedB;
+        const btn = document.getElementById('deckB-muteBtn');
+        btn.innerHTML = isMutedB ? '<i class="fa-solid fa-volume-xmark text-red-500 text-xs"></i>' : '<i class="fa-solid fa-volume-high text-indigo-400 text-xs"></i>';
+      }
+      applyMasterCrossfade(parseFloat(document.getElementById('crossfader').value));
+    }
+
+    function setDeckVolume(deck, volume) {
+      const player = deck === 'A' ? playerA : playerB;
+      if (player && typeof player.setVolume === 'function') {
+        player.setVolume(Math.max(0, Math.min(100, volume)));
+      }
+    }
+
+    function applyMasterCrossfade(v) {
+      let faderFactorA, faderFactorB;
+
+      if (v <= 50) {
+        faderFactorA = 1;
+        faderFactorB = v / 50;
+      } else {
+        faderFactorA = (100 - v) / 50;
+        faderFactorB = 1;
+      }
+
+      const finalVolA = isMutedA ? 0 : Math.round(deckGainA * faderFactorA);
+      const finalVolB = isMutedB ? 0 : Math.round(deckGainB * faderFactorB);
+
+      setDeckVolume('A', finalVolA);
+      setDeckVolume('B', finalVolB);
+
+      document.getElementById('deckA-volText').textContent = `${finalVolA}%`;
+      document.getElementById('deckB-volText').textContent = `${finalVolB}%`;
+      document.getElementById('faderPctA').textContent = `A: ${Math.round(faderFactorA * 100)}%`;
+      document.getElementById('faderPctB').textContent = `B: ${Math.round(faderFactorB * 100)}%`;
+
+      if (v < 50) {
+        document.getElementById('deckA-container').classList.remove('opacity-60');
+        document.getElementById('deckB-container').classList.add('opacity-60');
+        document.getElementById('deckA-liveTag').classList.remove('hidden');
+        document.getElementById('deckB-liveTag').classList.add('hidden');
+        document.getElementById('deckA-led').className = 'w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f0ff] animate-pulse';
+        document.getElementById('deckB-led').className = 'w-2.5 h-2.5 rounded-full bg-neutral-700';
+      } else if (v > 50) {
+        document.getElementById('deckB-container').classList.remove('opacity-60');
+        document.getElementById('deckA-container').classList.add('opacity-60');
+        document.getElementById('deckB-liveTag').classList.remove('hidden');
+        document.getElementById('deckA-liveTag').classList.add('hidden');
+        document.getElementById('deckB-led').className = 'w-2.5 h-2.5 rounded-full bg-indigo-400 shadow-[0_0_8px_#8b5cf6] animate-pulse';
+        document.getElementById('deckA-led').className = 'w-2.5 h-2.5 rounded-full bg-neutral-700';
+      } else {
+        document.getElementById('deckA-container').classList.remove('opacity-60');
+        document.getElementById('deckB-container').classList.remove('opacity-60');
+      }
+    }
+
+    function manualCrossfade(val) {
+      applyMasterCrossfade(parseFloat(val));
+    }
+
+    function setFaderPosition(val) {
+      const fader = document.getElementById('crossfader');
+      fader.value = val;
+      applyMasterCrossfade(val);
+    }
+
+    function triggerManualTransition() {
+      if (isTransitioning) return;
+      const target = activeDeck === 'A' ? 'B' : 'A';
+      const duration = parseFloat(document.getElementById('transitionDuration').value) || 6;
+      executeTransition(target, duration);
+    }
+
+    function toggleAutoMix() {
+      autoMixActive = !autoMixActive;
+      const btn = document.getElementById('btnAutoMix');
+      const topBadge = document.getElementById('topAutomixStatusBadge');
+
+      if (autoMixActive) {
+        btn.textContent = 'AUTO-MIX ON';
+        btn.className = 'w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-400 text-black rounded-lg font-display font-black text-xs tracking-wider shadow-lg shadow-emerald-500/30 transition-all animate-pulse';
+        topBadge.textContent = 'ON';
+        topBadge.className = 'text-emerald-400 font-bold';
+        startAutoMixMonitor();
+      } else {
+        btn.textContent = 'AUTO-MIX OFF';
+        btn.className = 'w-full py-2 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 rounded-lg font-display font-black text-xs tracking-wider border border-white/10 shadow transition-all';
+        topBadge.textContent = 'OFF';
+        topBadge.className = 'text-red-400 font-bold';
+        clearInterval(monitorInterval);
+      }
+    }
+
+    function startAutoMixMonitor() {
+      if (monitorInterval) clearInterval(monitorInterval);
+
+      monitorInterval = setInterval(() => {
+        if (!autoMixActive || isTransitioning) return;
+
+        const currentSource = activeDeck === 'A' ? playerA : playerB;
+        if (!currentSource || typeof currentSource.getDuration !== 'function') return;
+
+        const duration = currentSource.getDuration();
+        const currentTime = currentSource.getCurrentTime();
+        const transSecs = parseFloat(document.getElementById('transitionDuration').value) || 6;
+
+        if (duration > 0 && (duration - currentTime) <= transSecs && (duration - currentTime) > 0.4) {
+          executeTransition(activeDeck === 'A' ? 'B' : 'A', transSecs);
+        }
+      }, 500);
+    }
+
+    function executeTransition(targetDeck, durationSecs) {
+      isTransitioning = true;
+      const nextPlayer = targetDeck === 'A' ? playerA : playerB;
+      const prevDeck = targetDeck === 'A' ? 'B' : 'A';
+      const prevPlayer = prevDeck === 'A' ? playerA : playerB;
+      
+      applyQualityPolicy();
+      nextPlayer.unMute();
+      nextPlayer.playVideo();
+      syncExternalScreen('changeVideo', { videoId: targetDeck === 'A' ? currentVideoIdA : currentVideoIdB });
+
+      const steps = 40;
+      const stepTime = (durationSecs * 1000) / steps;
+      let currentStep = 0;
+      const crossfader = document.getElementById('crossfader');
+
+      const startVal = parseFloat(crossfader.value);
+      const endVal = targetDeck === 'B' ? 100 : 0;
+
+      const fadeInterval = setInterval(() => {
+        currentStep++;
+        const progress = currentStep / steps;
+
+        const faderVal = startVal + (endVal - startVal) * progress;
+        crossfader.value = faderVal;
+        applyMasterCrossfade(faderVal);
+
+        if (currentStep >= steps) {
+          clearInterval(fadeInterval);
+          
+          prevPlayer.pauseVideo();
+          activeDeck = targetDeck;
+          isTransitioning = false;
+
+          if (playlistQueue.length > 0) {
+            const nextTrack = playlistQueue.shift();
+            saveQueueToCache();
+            loadDirectly(prevDeck, nextTrack.videoId, nextTrack.title);
+            renderQueue();
+          }
+        }
+      }, stepTime);
+    }
+
+    async function searchYouTube(e) {
+      e.preventDefault();
+      const query = document.getElementById('searchInput').value.trim();
+      const apiKey = document.getElementById('apiKeyInput').value.trim() || localStorage.getItem(STORAGE_KEY_API);
+      const resultsContainer = document.getElementById('searchResults');
+      const status = document.getElementById('searchStatus');
+
+      if (!query) return;
+      if (!apiKey) {
+        alert('Ingresa tu Google API Key en la barra superior para buscar.');
+        return;
+      }
+
+      status.textContent = 'Buscando...';
+      resultsContainer.innerHTML = '<div class="py-6 text-center text-xs text-neutral-400 font-mono"><i class="fa-solid fa-spinner animate-spin text-cyan-400 text-base mb-1.5"></i><br>Cargando...</div>';
+
+      try {
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(query)}&key=${apiKey}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.error) throw new Error(data.error.message);
+
+        status.textContent = `${data.items.length} resultados`;
+        resultsContainer.innerHTML = '';
+
+        data.items.forEach(item => {
+          const videoId = item.id.videoId;
+          const title = item.snippet.title;
+          const channel = item.snippet.channelTitle;
+          const thumb = item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : item.snippet.thumbnails.default.url;
+
+          const card = document.createElement('div');
+          card.className = 'flex items-center justify-between gap-2.5 p-1.5 bg-neutral-950 hover:bg-neutral-900 border border-white/5 hover:border-cyan-500/30 rounded-lg transition duration-150 group';
+          card.innerHTML = `
+            <div class="flex items-center gap-2.5 overflow-hidden">
+              <div class="relative w-14 h-9 rounded overflow-hidden flex-shrink-0 border border-white/10">
+                <img src="${thumb}" class="w-full h-full object-cover group-hover:scale-105 transition" alt="thumb">
+              </div>
+              <div class="overflow-hidden">
+                <div class="font-semibold text-xs text-neutral-200 truncate" title="${title}">${title}</div>
+                <div class="text-[9px] text-neutral-500 font-mono truncate">${channel}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 flex-shrink-0">
+              <button onclick="loadDirectly('A', '${videoId}', '${escapeQuotes(title)}')" class="px-2 py-1 bg-cyan-950/80 hover:bg-cyan-500 text-cyan-400 hover:text-black border border-cyan-500/30 rounded text-[9px] font-display font-bold transition">DECK A</button>
+              <button onclick="loadDirectly('B', '${videoId}', '${escapeQuotes(title)}')" class="px-2 py-1 bg-indigo-950/80 hover:bg-indigo-500 text-indigo-400 hover:text-white border border-indigo-500/30 rounded text-[9px] font-display font-bold transition">DECK B</button>
+              <button onclick="addToQueue('${videoId}', '${escapeQuotes(title)}', '${thumb}', '${escapeQuotes(channel)}')" class="px-2.5 py-1 bg-pink-600 hover:bg-pink-500 text-white rounded text-[9px] font-display font-bold transition shadow shadow-pink-600/30 flex items-center gap-1">
+                <i class="fa-solid fa-plus"></i> COLA
+              </button>
+            </div>
+          `;
+          resultsContainer.appendChild(card);
+        });
+
+      } catch (err) {
+        status.textContent = 'Error';
+        resultsContainer.innerHTML = `<div class="p-3 text-center text-xs text-red-400 font-mono bg-red-950/20 border border-red-900/30 rounded-lg">Error: ${err.message}</div>`;
+      }
+    }
+
+    function extractPlaylistId(input) {
+      const match = input.match(/[?&]list=([^#\&\?]+)/);
+      return match ? match[1] : input.trim();
+    }
+
+    async function importYouTubePlaylist(e) {
+      e.preventDefault();
+      const rawInput = document.getElementById('playlistUrlInput').value.trim();
+      const playlistId = extractPlaylistId(rawInput);
+      const apiKey = document.getElementById('apiKeyInput').value.trim() || localStorage.getItem(STORAGE_KEY_API);
+      const resultsContainer = document.getElementById('searchResults');
+      const status = document.getElementById('searchStatus');
+
+      if (!playlistId) {
+        alert('Introduce un enlace o ID de Playlist válido.');
+        return;
+      }
+      if (!apiKey) {
+        alert('Ingresa tu Google API Key en la barra superior.');
+        return;
+      }
+
+      status.textContent = 'Importando...';
+      resultsContainer.innerHTML = '<div class="py-6 text-center text-xs text-neutral-400 font-mono"><i class="fa-solid fa-spinner animate-spin text-pink-500 text-base mb-1.5"></i><br>Obteniendo tracks...</div>';
+
+      try {
+        let allItems = [];
+        let nextPageToken = '';
+        let pageCount = 0;
+        const maxPages = 2;
+
+        do {
+          const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&pageToken=${nextPageToken}&key=${apiKey}`;
+          const res = await fetch(url);
+          const data = await res.json();
+
+          if (data.error) throw new Error(data.error.message);
+
+          if (data.items) {
+            allItems = allItems.concat(data.items);
+          }
+
+          nextPageToken = data.nextPageToken || '';
+          pageCount++;
+        } while (nextPageToken && pageCount < maxPages);
+
+        if (allItems.length === 0) {
+          throw new Error('La playlist está vacía o es privada.');
+        }
+
+        let addedCount = 0;
+        allItems.forEach(item => {
+          const snippet = item.snippet;
+          if (snippet && snippet.resourceId && snippet.resourceId.videoId && snippet.title !== 'Private video' && snippet.title !== 'Deleted video') {
+            const videoId = snippet.resourceId.videoId;
+            const title = snippet.title;
+            const channel = snippet.videoOwnerChannelTitle || snippet.channelTitle || 'YouTube';
+            const thumb = snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || 'https://via.placeholder.com/120x90/101014/ffffff?text=Video';
+
+            playlistQueue.push({ videoId, title, thumb, channel });
+            addedCount++;
+          }
+        });
+
+        saveQueueToCache();
+        renderQueue();
+
+        status.textContent = `¡${addedCount} agregados!`;
+        resultsContainer.innerHTML = `
+          <div class="p-3 text-center bg-pink-950/30 border border-pink-500/30 rounded-xl flex flex-col items-center gap-1.5">
+            <i class="fa-solid fa-circle-check text-pink-400 text-2xl"></i>
+            <h3 class="font-display font-bold text-xs text-pink-300">¡Playlist importada con éxito!</h3>
+            <p class="text-[10px] text-neutral-300 font-mono">Se añadieron <span class="text-pink-400 font-bold">${addedCount}</span> canciones a la Cola Automix.</p>
+            <button onclick="switchInputTab('search')" class="mt-1 px-3 py-1 bg-neutral-900 hover:bg-neutral-800 text-[10px] font-mono rounded border border-white/10 transition">
+              Volver a buscar
+            </button>
+          </div>
+        `;
+        document.getElementById('playlistUrlInput').value = '';
+
+      } catch (err) {
+        status.textContent = 'Error';
+        resultsContainer.innerHTML = `<div class="p-3 text-center text-xs text-red-400 font-mono bg-red-950/20 border border-red-900/30 rounded-lg">Error al cargar playlist: ${err.message}</div>`;
+      }
+    }
+
+    function escapeQuotes(str) {
+      return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function saveQueueToCache() {
+      localStorage.setItem(STORAGE_KEY_QUEUE, JSON.stringify(playlistQueue));
+    }
+
+    function addToQueue(videoId, title, thumb, channel) {
+      playlistQueue.push({ videoId, title, thumb, channel });
+      saveQueueToCache();
+      renderQueue();
+    }
+
+    function removeFromQueue(index) {
+      playlistQueue.splice(index, 1);
+      saveQueueToCache();
+      renderQueue();
+    }
+
+    function clearQueue() {
+      playlistQueue = [];
+      saveQueueToCache();
+      renderQueue();
+    }
+
+    function shuffleQueue() {
+      if (playlistQueue.length <= 1) return;
+      for (let i = playlistQueue.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [playlistQueue[i], playlistQueue[j]] = [playlistQueue[j], playlistQueue[i]];
+      }
+      saveQueueToCache();
+      renderQueue();
+    }
+
+    function renderQueue() {
+      const container = document.getElementById('queueContainer');
+      document.getElementById('queueCount').textContent = playlistQueue.length;
+
+      if (playlistQueue.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-neutral-500 font-mono text-xs flex flex-col items-center gap-1.5">
+            <i class="fa-solid fa-list text-lg text-neutral-600"></i>
+            <span>Cola vacía. Añade pistas para Automix continuo.</span>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      playlistQueue.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between p-1.5 bg-neutral-950 hover:bg-neutral-900 border border-white/5 rounded-lg text-xs group transition';
+        div.innerHTML = `
+          <div class="flex items-center gap-2 overflow-hidden">
+            <span class="text-[9px] font-mono text-cyan-400 font-bold w-4">${idx + 1}.</span>
+            <img src="${item.thumb}" class="w-8 h-6 object-cover rounded flex-shrink-0 border border-white/10" alt="thumb">
+            <div class="overflow-hidden">
+              <span class="truncate block text-xs text-neutral-200 font-semibold">${item.title}</span>
+              <span class="text-[8px] text-neutral-500 font-mono block truncate">${item.channel || 'YouTube'}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="loadDirectly('A', '${item.videoId}', '${escapeQuotes(item.title)}')" class="px-1.5 py-0.5 bg-neutral-900 hover:bg-cyan-950 text-[8px] font-mono text-cyan-400 rounded border border-white/5" title="Cargar Deck A">A</button>
+            <button onclick="loadDirectly('B', '${item.videoId}', '${escapeQuotes(item.title)}')" class="px-1.5 py-0.5 bg-neutral-900 hover:bg-indigo-950 text-[8px] font-mono text-indigo-400 rounded border border-white/5" title="Cargar Deck B">B</button>
+            <button onclick="removeFromQueue(${idx})" class="text-neutral-500 hover:text-red-400 p-1 transition" title="Eliminar">
+              <i class="fa-solid fa-xmark text-xs"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function switchInputTab(tab) {
+      const searchForm = document.getElementById('searchForm');
+      const playlistForm = document.getElementById('playlistForm');
+      const searchBtn = document.getElementById('tabSearchBtn');
+      const playlistBtn = document.getElementById('tabPlaylistBtn');
+
+      if (tab === 'search') {
+        searchForm.classList.remove('hidden');
+        playlistForm.classList.add('hidden');
+        searchBtn.className = 'px-3 py-1 rounded-lg font-display font-bold text-xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center gap-1.5 transition';
+        playlistBtn.className = 'px-3 py-1 rounded-lg font-display font-bold text-xs bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-white/5 flex items-center gap-1.5 transition';
+      } else {
+        playlistForm.classList.remove('hidden');
+        searchForm.classList.add('hidden');
+        playlistBtn.className = 'px-3 py-1 rounded-lg font-display font-bold text-xs bg-pink-500/20 text-pink-400 border border-pink-500/40 flex items-center gap-1.5 transition';
+        searchBtn.className = 'px-3 py-1 rounded-lg font-display font-bold text-xs bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-white/5 flex items-center gap-1.5 transition';
+      }
+    }
+
+    function loadSavedSettings() {
+      const savedKey = localStorage.getItem(STORAGE_KEY_API);
+      const input = document.getElementById('apiKeyInput');
+      if (savedKey && input) input.value = savedKey;
+
+      const savedBw = localStorage.getItem(STORAGE_KEY_BW);
+      if (savedBw) {
+        bandwidthPercent = parseInt(savedBw);
+        document.getElementById('bandwidthSlider').value = bandwidthPercent;
+        document.getElementById('bandwidthDisplay').textContent = `${bandwidthPercent}%`;
+      }
+    }
+
+    function saveApiKey() {
+      const key = document.getElementById('apiKeyInput').value.trim();
+      if (!key) return;
+      localStorage.setItem(STORAGE_KEY_API, key);
+      alert('API Key de YouTube guardada correctamente.');
+    }
+
+    function removeApiKey() {
+      localStorage.removeItem(STORAGE_KEY_API);
+      document.getElementById('apiKeyInput').value = '';
+    }
+  </script>
+</body>
+</html>
