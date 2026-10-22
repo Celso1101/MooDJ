@@ -329,100 +329,7 @@
        ======================================================== -->
   <div id="main-dj-root" class="min-h-screen p-2 sm:p-3 md:p-4 flex flex-col justify-between relative bg-black">
     
-    <!-- TOP BAR -->
-    <header class="w-full max-w-[1680px] mx-auto mb-2.5 flex flex-wrap items-center justify-between gap-2 p-2.5 bg-neutral-900/90 backdrop-blur-md rounded-xl border border-white/5 shadow-2xl relative z-50">
-      
-      <!-- BRANDING -->
-      <div class="flex items-center gap-2.5">
-        <div class="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-red-600 via-neutral-950 to-black p-0.5 shadow-lg shadow-red-600/30">
-          <div class="w-full h-full bg-black rounded-[7px] flex items-center justify-center">
-            <i class="fa-solid fa-compact-disc text-red-500 text-xl animate-spin" style="animation-duration: 6s;"></i>
-          </div>
-        </div>
-        <div>
-          <div class="flex items-center gap-1.5">
-            <h1 class="font-display font-black text-xl tracking-wider text-red-500 drop-shadow-[0_0_12px_rgba(239,68,68,0.7)]">MOOD Lounge</h1>
-            <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-red-950 text-red-400 border border-red-800/60">PRO MIXER</span>
-          </div>
-          <p class="text-[9px] text-neutral-400 uppercase tracking-widest font-mono">Dual Deck & Dual-Mode Broadcast Station</p>
-        </div>
-      </div>
 
-      <!-- BOTONES DE CONTROL SUPERIOR (MENÚS DESPLEGABLES) -->
-      <div class="flex flex-wrap items-center gap-2 bg-black/50 p-1.5 rounded-xl border border-white/5 relative z-50">
-        
-        <!-- Menú Desplegable SALIDA -->
-        <div class="relative">
-          <button onclick="toggleDropdown('salidaMenu')" class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-display font-bold text-xs tracking-wider shadow-md flex items-center gap-2 active:scale-95 transition">
-            <i class="fa-solid fa-tv text-amber-300 text-xs"></i>
-            <span>SALIDA</span>
-            <i class="fa-solid fa-caret-down text-[10px]"></i>
-          </button>
-          <div id="salidaMenu" class="dropdown-menu">
-            <div onclick="openExternalDisplay('video'); closeAllDropdowns();" class="dropdown-item">
-              <i class="fa-solid fa-film text-cyan-400"></i> SALIDA VIDEO
-            </div>
-            <div onclick="openExternalDisplay('ambient'); closeAllDropdowns();" class="dropdown-item">
-              <i class="fa-solid fa-heart-pulse text-red-500"></i> SALIDA SIN VIDEO
-            </div>
-          </div>
-        </div>
-
-        <!-- Menú Desplegable LOGO -->
-        <div class="relative">
-          <input type="file" id="directLogoInput" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
-          <button onclick="toggleDropdown('logoMenu')" class="px-3.5 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-cyan-400 hover:text-white border border-cyan-500/30 font-display font-bold text-xs flex items-center gap-2 active:scale-95 transition">
-            <i class="fa-solid fa-image text-cyan-400 text-xs"></i>
-            <span>LOGO</span>
-            <i class="fa-solid fa-caret-down text-[10px]"></i>
-          </button>
-          <div id="logoMenu" class="dropdown-menu">
-            <div onclick="document.getElementById('directLogoInput').click(); closeAllDropdowns();" class="dropdown-item">
-              <i class="fa-solid fa-cloud-arrow-up text-cyan-400"></i> CARGAR LOGO
-            </div>
-            <div onclick="toggleLogoSettingsModal(); closeAllDropdowns();" class="dropdown-item">
-              <i class="fa-solid fa-sliders text-amber-400"></i> AJUSTAR TAMAÑO / OPACIDAD
-            </div>
-            <div onclick="removeLogo(); closeAllDropdowns();" class="dropdown-item">
-              <i class="fa-solid fa-trash-can text-red-400"></i> ELIMINAR LOGO
-            </div>
-          </div>
-        </div>
-
-        <div class="hidden xl:flex items-center gap-2 pl-2 border-l border-neutral-800 font-mono text-xs">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-          <span class="text-neutral-400">AUTOMIX:</span>
-          <span id="topAutomixStatusBadge" class="text-emerald-400 font-bold">ON</span>
-        </div>
-      </div>
-
-      <!-- ANCHO DE BANDA & API KEY -->
-      <div class="flex flex-wrap items-center gap-2">
-        <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-black/60 border border-white/5">
-          <i class="fa-solid fa-gauge-high text-cyan-400 text-xs"></i>
-          <div class="flex flex-col">
-            <div class="flex justify-between text-[9px] font-mono text-neutral-400 gap-1.5">
-              <span>PRECARGA</span>
-              <span id="bandwidthDisplay" class="text-cyan-400 font-bold">30%</span>
-            </div>
-            <input id="bandwidthSlider" type="range" min="10" max="100" value="30" oninput="updateBandwidthLimit(this.value)"
-                   class="w-16 accent-cyan-400 cursor-pointer h-1 bg-neutral-800 rounded">
-          </div>
-        </div>
-
-        <div class="flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded-lg border border-white/5">
-          <i class="fa-solid fa-key text-neutral-500 text-[10px]"></i>
-          <input id="apiKeyInput" type="password" placeholder="YouTube API Key" 
-               class="bg-neutral-900 border border-neutral-700/80 rounded px-2 py-0.5 text-xs text-neutral-200 w-28 sm:w-36 focus:border-cyan-400 outline-none font-mono">
-          <button onclick="saveApiKey()" class="bg-cyan-500 hover:bg-cyan-400 text-black px-2.5 py-0.5 rounded text-xs font-bold transition">
-            <i class="fa-solid fa-floppy-disk"></i>
-          </button>
-          <button onclick="removeApiKey()" class="bg-neutral-800 hover:bg-red-900/60 text-neutral-400 hover:text-red-300 px-2 py-0.5 rounded text-xs transition">
-            <i class="fa-solid fa-trash-can"></i>
-          </button>
-        </div>
-      </div>
-    </header>
 
     <!-- MODAL DE CONFIGURACIÓN DE LOGO -->
     <div id="logoSettingsModal" class="hidden fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -496,6 +403,16 @@
             <div id="playerA"></div>
             <div id="deckA-liveTag" class="absolute top-1.5 left-1.5 bg-cyan-500 text-black font-display font-black text-[8px] px-1.5 py-0.5 rounded shadow pointer-events-none z-20">
               ON AIR
+            </div>
+
+            <!-- Overlay Ahorro GPU cuando SALIDA VIDEO está abierta en la TV -->
+            <div id="deckA-ecoOverlay" class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/90 p-3 text-center border border-cyan-500/30 rounded backdrop-blur-sm">
+              <i class="fa-solid fa-tv text-cyan-400 text-2xl mb-1.5 animate-pulse"></i>
+              <span class="text-[11px] font-display font-bold text-cyan-300 tracking-wider">Reproduciendo video en Pantalla Externa</span>
+              <span class="text-[9px] font-mono text-neutral-400 mt-1">Audio sonando normal en consola (Ahorro GPU activo)</span>
+              <button onclick="toggleConsolePreviewOverride()" class="mt-2 px-2.5 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-[9px] font-mono text-cyan-300 border border-cyan-500/30 pointer-events-auto transition active:scale-95">
+                <i class="fa-regular fa-eye mr-1"></i>Ver miniatura local
+              </button>
             </div>
             
             <div id="deckA-logoBox" class="logo-watermark" style="top: 6%; left: 70%; width: 25%;">
@@ -653,6 +570,16 @@
             <div id="deckB-liveTag" class="hidden absolute top-1.5 left-1.5 bg-indigo-500 text-white font-display font-black text-[8px] px-1.5 py-0.5 rounded shadow pointer-events-none z-20">
               ON AIR
             </div>
+
+            <!-- Overlay Ahorro GPU cuando SALIDA VIDEO está abierta en la TV -->
+            <div id="deckB-ecoOverlay" class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/90 p-3 text-center border border-indigo-500/30 rounded backdrop-blur-sm">
+              <i class="fa-solid fa-tv text-indigo-400 text-2xl mb-1.5 animate-pulse"></i>
+              <span class="text-[11px] font-display font-bold text-indigo-300 tracking-wider">Reproduciendo video en Pantalla Externa</span>
+              <span class="text-[9px] font-mono text-neutral-400 mt-1">Audio sonando normal en consola (Ahorro GPU activo)</span>
+              <button onclick="toggleConsolePreviewOverride()" class="mt-2 px-2.5 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-[9px] font-mono text-indigo-300 border border-indigo-500/30 pointer-events-auto transition active:scale-95">
+                <i class="fa-regular fa-eye mr-1"></i>Ver miniatura local
+              </button>
+            </div>
             
             <div id="deckB-logoBox" class="logo-watermark" style="top: 6%; left: 70%; width: 25%;">
               <img id="deckB-logoImg" src="https://via.placeholder.com/250x100/000000/ef4444?text=MOOD+Lounge" alt="logo">
@@ -729,41 +656,43 @@
       
       <div class="lg:col-span-7 dj-panel rounded-xl p-3 flex flex-col gap-2.5">
         
-        <div class="flex items-center justify-between border-b border-white/10 pb-2">
-          <div class="flex items-center gap-1.5">
-            <button id="tabSearchBtn" onclick="switchInputTab('search')" class="px-3 py-1 rounded-lg font-display font-bold text-xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center gap-1.5 transition">
-              <i class="fa-solid fa-magnifying-glass"></i> BUSCAR CANCIONES
+        <div class="flex items-center justify-between border-b border-white/10 pb-2.5 mb-1">
+          <div class="flex items-center gap-2">
+            <button id="tabSearchBtn" onclick="switchInputTab('search')" class="px-4 py-2 rounded-lg font-display font-bold text-sm bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center gap-2 transition active:scale-95">
+              <i class="fa-solid fa-magnifying-glass text-sm"></i> BUSCAR CANCIONES
             </button>
-            <button id="tabPlaylistBtn" onclick="switchInputTab('playlist')" class="px-3 py-1 rounded-lg font-display font-bold text-xs bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-white/5 flex items-center gap-1.5 transition">
-              <i class="fa-solid fa-list-check text-pink-500"></i> IMPORTAR PLAYLIST
+            <button id="tabPlaylistBtn" onclick="switchInputTab('playlist')" class="px-4 py-2 rounded-lg font-display font-bold text-sm bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-white/5 flex items-center gap-2 transition active:scale-95">
+              <i class="fa-solid fa-list-check text-pink-500 text-sm"></i> IMPORTAR PLAYLIST
             </button>
           </div>
-          <span id="searchStatus" class="text-[9px] font-mono text-neutral-400"></span>
+          <span id="searchStatus" class="text-xs font-mono text-neutral-400"></span>
         </div>
 
-        <form id="searchForm" onsubmit="searchYouTube(event)" class="flex gap-2">
+        <form id="searchForm" onsubmit="searchYouTube(event)" class="flex gap-2.5 items-stretch">
           <div class="relative flex-1">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-xs"></i>
+            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 text-base pointer-events-none"></i>
             <input id="searchInput" type="text" placeholder="Buscar artista, canción, remix..." 
-                 class="w-full bg-neutral-950 border border-neutral-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-neutral-100 outline-none focus:border-cyan-400 transition font-sans">
+                 class="w-full h-full bg-neutral-950 border border-neutral-700/80 rounded-xl pl-12 pr-4 py-3 text-[17px] font-medium text-neutral-100 placeholder:text-neutral-500 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 transition font-sans shadow-inner">
           </div>
-          <button type="submit" class="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-display font-bold px-4 py-1.5 rounded-lg text-xs tracking-wider shadow-md shadow-red-600/20 active:scale-95 transition flex items-center gap-1">
-            <i class="fa-solid fa-search"></i> BUSCAR
+          <button type="submit" class="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-display font-bold px-6 py-3 rounded-xl text-sm tracking-wider shadow-lg shadow-red-600/30 active:scale-95 transition flex items-center gap-2 flex-shrink-0">
+            <i class="fa-solid fa-search text-base"></i>
+            <span>BUSCAR</span>
           </button>
         </form>
 
-        <form id="playlistForm" onsubmit="importYouTubePlaylist(event)" class="hidden flex gap-2">
+        <form id="playlistForm" onsubmit="importYouTubePlaylist(event)" class="hidden flex gap-2.5 items-stretch">
           <div class="relative flex-1">
-            <i class="fa-solid fa-link absolute left-3 top-1/2 -translate-y-1/2 text-pink-500 text-xs"></i>
+            <i class="fa-solid fa-link absolute left-4 top-1/2 -translate-y-1/2 text-pink-400 text-base pointer-events-none"></i>
             <input id="playlistUrlInput" type="text" placeholder="Pega el enlace o ID de la playlist (Ej: https://www.youtube.com/playlist?list=PL...)" 
-                 class="w-full bg-neutral-950 border border-neutral-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-neutral-100 outline-none focus:border-pink-500 transition font-sans">
+                 class="w-full h-full bg-neutral-950 border border-neutral-700/80 rounded-xl pl-12 pr-4 py-3 text-[17px] font-medium text-neutral-100 placeholder:text-neutral-500 outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/50 transition font-sans shadow-inner">
           </div>
-          <button type="submit" class="bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-500 hover:to-pink-400 text-white font-display font-bold px-4 py-1.5 rounded-lg text-xs tracking-wider shadow-md shadow-pink-600/20 active:scale-95 transition flex items-center gap-1">
-            <i class="fa-solid fa-cloud-arrow-down"></i> CARGAR PLAYLIST
+          <button type="submit" class="bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-500 hover:to-pink-400 text-white font-display font-bold px-6 py-3 rounded-xl text-sm tracking-wider shadow-lg shadow-pink-600/30 active:scale-95 transition flex items-center gap-2 flex-shrink-0">
+            <i class="fa-solid fa-cloud-arrow-down text-base"></i>
+            <span>CARGAR PLAYLIST</span>
           </button>
         </form>
 
-        <div id="searchResults" class="overflow-y-auto max-h-52 flex flex-col gap-1.5 pr-1">
+        <div id="searchResults" class="overflow-y-auto flex flex-col gap-2 pr-1.5" style="height: 640px; min-height: 640px; max-height: 640px;">
           <div class="text-center py-6 text-neutral-500 font-mono text-xs flex flex-col items-center gap-1.5">
             <i class="fa-solid fa-headphones text-xl text-neutral-600"></i>
             <span>Busca canciones o pega el enlace de una playlist para agregarlas a la cola Automix.</span>
@@ -789,10 +718,106 @@
           </div>
         </div>
 
-        <div id="queueContainer" class="overflow-y-auto max-h-52 flex flex-col gap-1.5 pr-1"></div>
+        <div id="queueContainer" class="overflow-y-auto flex flex-col gap-2 pr-1.5" style="height: 640px; min-height: 640px; max-height: 640px;"></div>
       </div>
 
     </section>
+
+    <!-- BARRA INFERIOR DE CONSOLA: MOOD LOUNGE + SALIDA + LOGO + PRECARGA + API KEY -->
+    <!-- TOP BAR -->
+    <header class="w-full max-w-[1680px] mx-auto mt-3 mb-2.5 flex flex-wrap items-center justify-between gap-2 p-2.5 bg-neutral-900/90 backdrop-blur-md rounded-xl border border-white/5 shadow-2xl relative z-50">
+      
+      <!-- BRANDING -->
+      <div class="flex items-center gap-2.5">
+        <div class="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-red-600 via-neutral-950 to-black p-0.5 shadow-lg shadow-red-600/30">
+          <div class="w-full h-full bg-black rounded-[7px] flex items-center justify-center">
+            <i class="fa-solid fa-compact-disc text-red-500 text-xl animate-spin" style="animation-duration: 6s;"></i>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="font-display font-black text-xl tracking-wider text-red-500 drop-shadow-[0_0_12px_rgba(239,68,68,0.7)]">MOOD Lounge</h1>
+            <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-red-950 text-red-400 border border-red-800/60">PRO MIXER</span>
+          </div>
+          <p class="text-[9px] text-neutral-400 uppercase tracking-widest font-mono">Dual Deck & Dual-Mode Broadcast Station</p>
+        </div>
+      </div>
+
+      <!-- BOTONES DE CONTROL SUPERIOR (MENÚS DESPLEGABLES) -->
+      <div class="flex flex-wrap items-center gap-2 bg-black/50 p-1.5 rounded-xl border border-white/5 relative z-50">
+        
+        <!-- Menú Desplegable SALIDA -->
+        <div class="relative">
+          <button onclick="toggleDropdown('salidaMenu')" class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-display font-bold text-xs tracking-wider shadow-md flex items-center gap-2 active:scale-95 transition">
+            <i class="fa-solid fa-tv text-amber-300 text-xs"></i>
+            <span>SALIDA</span>
+            <i class="fa-solid fa-caret-down text-[10px]"></i>
+          </button>
+          <div id="salidaMenu" class="dropdown-menu">
+            <div onclick="openExternalDisplay('video'); closeAllDropdowns();" class="dropdown-item">
+              <i class="fa-solid fa-film text-cyan-400"></i> SALIDA VIDEO
+            </div>
+            <div onclick="openExternalDisplay('ambient'); closeAllDropdowns();" class="dropdown-item">
+              <i class="fa-solid fa-heart-pulse text-red-500"></i> SALIDA SIN VIDEO
+            </div>
+          </div>
+        </div>
+
+        <!-- Menú Desplegable LOGO -->
+        <div class="relative">
+          <input type="file" id="directLogoInput" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
+          <button onclick="toggleDropdown('logoMenu')" class="px-3.5 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-cyan-400 hover:text-white border border-cyan-500/30 font-display font-bold text-xs flex items-center gap-2 active:scale-95 transition">
+            <i class="fa-solid fa-image text-cyan-400 text-xs"></i>
+            <span>LOGO</span>
+            <i class="fa-solid fa-caret-down text-[10px]"></i>
+          </button>
+          <div id="logoMenu" class="dropdown-menu">
+            <div onclick="document.getElementById('directLogoInput').click(); closeAllDropdowns();" class="dropdown-item">
+              <i class="fa-solid fa-cloud-arrow-up text-cyan-400"></i> CARGAR LOGO
+            </div>
+            <div onclick="toggleLogoSettingsModal(); closeAllDropdowns();" class="dropdown-item">
+              <i class="fa-solid fa-sliders text-amber-400"></i> AJUSTAR TAMAÑO / OPACIDAD
+            </div>
+            <div onclick="removeLogo(); closeAllDropdowns();" class="dropdown-item">
+              <i class="fa-solid fa-trash-can text-red-400"></i> ELIMINAR LOGO
+            </div>
+          </div>
+        </div>
+
+        <div class="hidden xl:flex items-center gap-2 pl-2 border-l border-neutral-800 font-mono text-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span class="text-neutral-400">AUTOMIX:</span>
+          <span id="topAutomixStatusBadge" class="text-emerald-400 font-bold">ON</span>
+        </div>
+      </div>
+
+      <!-- ANCHO DE BANDA & API KEY -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-black/60 border border-white/5">
+          <i class="fa-solid fa-gauge-high text-cyan-400 text-xs"></i>
+          <div class="flex flex-col">
+            <div class="flex justify-between text-[9px] font-mono text-neutral-400 gap-1.5">
+              <span>PRECARGA</span>
+              <span id="bandwidthDisplay" class="text-cyan-400 font-bold">30%</span>
+            </div>
+            <input id="bandwidthSlider" type="range" min="10" max="100" value="30" oninput="updateBandwidthLimit(this.value)"
+                   class="w-16 accent-cyan-400 cursor-pointer h-1 bg-neutral-800 rounded">
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 bg-black/60 px-2 py-1 rounded-lg border border-white/5">
+          <i class="fa-solid fa-key text-neutral-500 text-[10px]"></i>
+          <input id="apiKeyInput" type="password" placeholder="YouTube API Key" 
+               class="bg-neutral-900 border border-neutral-700/80 rounded px-2 py-0.5 text-xs text-neutral-200 w-28 sm:w-36 focus:border-cyan-400 outline-none font-mono">
+          <button onclick="saveApiKey()" class="bg-cyan-500 hover:bg-cyan-400 text-black px-2.5 py-0.5 rounded text-xs font-bold transition">
+            <i class="fa-solid fa-floppy-disk"></i>
+          </button>
+          <button onclick="removeApiKey()" class="bg-neutral-800 hover:bg-red-900/60 text-neutral-400 hover:text-red-300 px-2 py-0.5 rounded text-xs transition">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+    </header>
   </div>
 
   <!-- YouTube IFrame API -->
@@ -854,6 +879,11 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       if (isDisplayMode) {
+        // En SALIDA, eliminar del DOM todo el código pesado de la consola DJ inmediatamente
+        const djRoot = document.getElementById('main-dj-root');
+        if (djRoot) djRoot.remove();
+        const modal = document.getElementById('logoSettingsModal');
+        if (modal) modal.remove();
         document.getElementById('main-dj-root').classList.add('hidden');
         document.getElementById('display-mode-root').classList.remove('hidden');
         document.title = "MOOD Lounge - Salida Externa";
@@ -879,39 +909,16 @@
     }
 
     // Motor de Deriva Ultra Lenta
+    // Anti-quemado ligero basado en flotación nativa CSS (0% uso de procesador, sin setInterval de 25ms)
     function startAntiBurnBounce() {
-      if (bounceInterval) clearInterval(bounceInterval);
-      
-      const w = window.innerWidth || 1280;
-      const h = window.innerHeight || 720;
-      posX = Math.max(30, (w * 0.35));
-      posY = Math.max(30, (h * 0.35));
-      velX = 0.15;
-      velY = 0.12;
-
-      bounceInterval = setInterval(() => {
-        if (displayVisualMode !== 'ambient') return;
-
-        const box = document.getElementById('screenLogoBox');
-        if (!box) return;
-
-        const boxWidth = box.offsetWidth || 380;
-        const boxHeight = box.offsetHeight || 190;
-        const maxX = window.innerWidth - boxWidth - 25;
-        const maxY = window.innerHeight - boxHeight - 25;
-        const minX = 25;
-        const minY = 25;
-
-        posX += velX;
-        posY += velY;
-
-        if (posX >= maxX) { posX = maxX; velX = -Math.abs(velX); }
-        if (posX <= minX) { posX = minX; velX = Math.abs(velX); }
-        if (posY >= maxY) { posY = maxY; velY = -Math.abs(velY); }
-        if (posY <= minY) { posY = minY; velY = Math.abs(velY); }
-
-        box.style.transform = `translate3d(${posX}px, ${posY}px, 0)`;
-      }, 25);
+      if (bounceInterval) {
+        clearInterval(bounceInterval);
+        bounceInterval = null;
+      }
+      const box = document.getElementById('screenLogoBox');
+      if (box) {
+        box.style.animation = 'moodGentleFloat 22s ease-in-out infinite alternate';
+      }
     }
 
     window.addEventListener('click', (e) => {
@@ -996,16 +1003,19 @@
           const energy = isBassBar ? (kickPeak * 68 + Math.random() * 22) : (Math.random() * 45 + kickPeak * 25);
           const barHeight = isPlaying ? Math.min(100, Math.max(10, energy)) : 8;
 
+          const scale = isPlaying ? Math.min(0.95, Math.max(0.10, energy / 100)) : 0.08;
           if (topBar) {
             topBar.style.backgroundColor = barColor;
-            topBar.style.boxShadow = isPlaying ? `0 0 10px ${barColor}` : 'none';
-            topBar.style.height = `${barHeight}%`;
+            topBar.style.height = '100%';
+            topBar.style.transformOrigin = 'bottom';
+            topBar.style.transform = `scaleY(${scale.toFixed(2)})`;
           }
 
           if (btmBar) {
             btmBar.style.backgroundColor = barColor;
-            btmBar.style.boxShadow = isPlaying ? `0 0 10px ${barColor}` : 'none';
-            btmBar.style.height = `${barHeight}%`;
+            btmBar.style.height = '100%';
+            btmBar.style.transformOrigin = 'top';
+            btmBar.style.transform = `scaleY(${scale.toFixed(2)})`;
           }
         }
       }, 55);
@@ -1052,6 +1062,8 @@
 
     function onYouTubeIframeAPIReady() {
       if (isDisplayMode) {
+        // SALIDA SIN VIDEO: No crear el 3er reproductor de YouTube (0 MB internet, 0 decodificadores)
+        if (displayVisualMode !== 'video') return;
         const vid = urlParams.get('vid') || currentVideoIdA;
         extPlayer = new YT.Player('extPlayer', {
           height: '100%',
@@ -1122,9 +1134,13 @@
 
     function openExternalDisplay(modeType) {
       const activeVideoId = activeDeck === 'A' ? currentVideoIdA : currentVideoIdB;
-      const url = `${window.location.origin}${window.location.pathname}?mode=display&type=${modeType}&vid=${activeVideoId}`;
+      const loc = window.location;
+      const basePath = loc.pathname.substring(0, loc.pathname.lastIndexOf('/') + 1);
+      const livePlayer = activeDeck === 'A' ? playerA : playerB;
+      const curSec = (livePlayer && livePlayer.getCurrentTime) ? Math.floor(livePlayer.getCurrentTime() || 0) : 0;
+      const url = `${loc.origin}${basePath}salida.html?type=${modeType}&vid=${activeVideoId}&t=${curSec}`;
       const left = window.screen.width ? window.screen.width : 1366;
-      window.open(url, 'MOOD_Lounge_Display', `width=1280,height=720,left=${left},top=0,menubar=no,toolbar=no,location=no,status=no`);
+      window.open(url, 'MOOD_Lounge_Display', `width=1280,height=720,left=${left},top=0,menubar=no,toolbar=no,location=no,status=no,noopener`);
       syncExternalScreen('switchMode', { mode: modeType });
       closeAllDropdowns();
     }
@@ -1665,21 +1681,24 @@
           const thumb = item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : item.snippet.thumbnails.default.url;
 
           const card = document.createElement('div');
-          card.className = 'flex items-center justify-between gap-2.5 p-1.5 bg-neutral-950 hover:bg-neutral-900 border border-white/5 hover:border-cyan-500/30 rounded-lg transition duration-150 group';
+          card.className = 'flex items-center justify-between gap-3 p-2 bg-neutral-950 hover:bg-neutral-900 border border-white/5 hover:border-cyan-500/30 rounded-xl transition duration-150 group';
           card.innerHTML = `
-            <div class="flex items-center gap-2.5 overflow-hidden">
-              <div class="relative w-14 h-9 rounded overflow-hidden flex-shrink-0 border border-white/10">
+            <div class="flex items-center gap-3 overflow-hidden flex-1">
+              <div class="relative rounded-lg overflow-hidden flex-shrink-0 border border-white/10 shadow" style="width: 82px; height: 50px;">
                 <img src="${thumb}" class="w-full h-full object-cover group-hover:scale-105 transition" alt="thumb">
               </div>
-              <div class="overflow-hidden">
-                <div class="font-semibold text-xs text-neutral-200 truncate" title="${title}">${title}</div>
-                <div class="text-[9px] text-neutral-500 font-mono truncate">${channel}</div>
+              <div class="overflow-hidden min-w-0 flex-1">
+                <div class="font-bold text-[15px] text-neutral-100 truncate leading-snug" title="${title}">${title}</div>
+                <div class="text-xs text-neutral-400 font-mono truncate mt-0.5 flex items-center gap-1.5">
+                  <i class="fa-brands fa-youtube text-red-500 text-xs"></i>
+                  <span>${channel}</span>
+                </div>
               </div>
             </div>
-            <div class="flex items-center gap-1 flex-shrink-0">
-              <button onclick="loadDirectly('A', '${videoId}', '${escapeQuotes(title)}')" class="px-2 py-1 bg-cyan-950/80 hover:bg-cyan-500 text-cyan-400 hover:text-black border border-cyan-500/30 rounded text-[9px] font-display font-bold transition">DECK A</button>
-              <button onclick="loadDirectly('B', '${videoId}', '${escapeQuotes(title)}')" class="px-2 py-1 bg-indigo-950/80 hover:bg-indigo-500 text-indigo-400 hover:text-white border border-indigo-500/30 rounded text-[9px] font-display font-bold transition">DECK B</button>
-              <button onclick="addToQueue('${videoId}', '${escapeQuotes(title)}', '${thumb}', '${escapeQuotes(channel)}')" class="px-2.5 py-1 bg-pink-600 hover:bg-pink-500 text-white rounded text-[9px] font-display font-bold transition shadow shadow-pink-600/30 flex items-center gap-1">
+            <div class="flex items-center gap-1.5 flex-shrink-0 ml-2">
+              <button onclick="loadDirectly('A', '${videoId}', '${escapeQuotes(title)}')" class="px-3 py-1.5 bg-cyan-950/90 hover:bg-cyan-500 text-cyan-300 hover:text-black border border-cyan-500/40 rounded-lg text-xs font-display font-bold transition active:scale-95">DECK A</button>
+              <button onclick="loadDirectly('B', '${videoId}', '${escapeQuotes(title)}')" class="px-3 py-1.5 bg-indigo-950/90 hover:bg-indigo-500 text-indigo-300 hover:text-white border border-indigo-500/40 rounded-lg text-xs font-display font-bold transition active:scale-95">DECK B</button>
+              <button onclick="addToQueue('${videoId}', '${escapeQuotes(title)}', '${thumb}', '${escapeQuotes(channel)}')" class="px-3.5 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-lg text-xs font-display font-bold transition shadow-md shadow-pink-600/30 active:scale-95 flex items-center gap-1.5">
                 <i class="fa-solid fa-plus"></i> COLA
               </button>
             </div>
@@ -1831,21 +1850,23 @@
       container.innerHTML = '';
       playlistQueue.forEach((item, idx) => {
         const div = document.createElement('div');
-        div.className = 'flex items-center justify-between p-1.5 bg-neutral-950 hover:bg-neutral-900 border border-white/5 rounded-lg text-xs group transition';
+        div.className = 'flex items-center justify-between p-2 bg-neutral-950 hover:bg-neutral-900 border border-white/5 rounded-xl group transition';
         div.innerHTML = `
-          <div class="flex items-center gap-2 overflow-hidden">
-            <span class="text-[9px] font-mono text-cyan-400 font-bold w-4">${idx + 1}.</span>
-            <img src="${item.thumb}" class="w-8 h-6 object-cover rounded flex-shrink-0 border border-white/10" alt="thumb">
-            <div class="overflow-hidden">
-              <span class="truncate block text-xs text-neutral-200 font-semibold">${item.title}</span>
-              <span class="text-[8px] text-neutral-500 font-mono block truncate">${item.channel || 'YouTube'}</span>
+          <div class="flex items-center gap-2.5 overflow-hidden flex-1">
+            <span class="text-xs font-mono text-cyan-400 font-black w-6 text-center flex-shrink-0">${idx + 1}.</span>
+            <div class="relative rounded-lg overflow-hidden flex-shrink-0 border border-white/10 shadow" style="width: 66px; height: 44px;">
+              <img src="${item.thumb}" class="w-full h-full object-cover" alt="thumb">
+            </div>
+            <div class="overflow-hidden min-w-0 flex-1">
+              <span class="truncate block text-[14px] text-neutral-100 font-bold leading-snug" title="${item.title}">${item.title}</span>
+              <span class="text-xs text-neutral-400 font-mono block truncate mt-0.5">${item.channel || 'YouTube'}</span>
             </div>
           </div>
-          <div class="flex items-center gap-1">
-            <button onclick="loadDirectly('A', '${item.videoId}', '${escapeQuotes(item.title)}')" class="px-1.5 py-0.5 bg-neutral-900 hover:bg-cyan-950 text-[8px] font-mono text-cyan-400 rounded border border-white/5" title="Cargar Deck A">A</button>
-            <button onclick="loadDirectly('B', '${item.videoId}', '${escapeQuotes(item.title)}')" class="px-1.5 py-0.5 bg-neutral-900 hover:bg-indigo-950 text-[8px] font-mono text-indigo-400 rounded border border-white/5" title="Cargar Deck B">B</button>
-            <button onclick="removeFromQueue(${idx})" class="text-neutral-500 hover:text-red-400 p-1 transition" title="Eliminar">
-              <i class="fa-solid fa-xmark text-xs"></i>
+          <div class="flex items-center gap-1.5 flex-shrink-0 ml-2">
+            <button onclick="loadDirectly('A', '${item.videoId}', '${escapeQuotes(item.title)}')" class="px-2.5 py-1 bg-neutral-900 hover:bg-cyan-950 text-xs font-mono font-bold text-cyan-400 rounded-lg border border-white/10 transition active:scale-95" title="Cargar Deck A">A</button>
+            <button onclick="loadDirectly('B', '${item.videoId}', '${escapeQuotes(item.title)}')" class="px-2.5 py-1 bg-neutral-900 hover:bg-indigo-950 text-xs font-mono font-bold text-indigo-400 rounded-lg border border-white/10 transition active:scale-95" title="Cargar Deck B">B</button>
+            <button onclick="removeFromQueue(${idx})" class="p-1.5 text-neutral-400 hover:text-red-400 transition" title="Eliminar de cola">
+              <i class="fa-solid fa-xmark text-sm"></i>
             </button>
           </div>
         `;
@@ -1862,13 +1883,13 @@
       if (tab === 'search') {
         searchForm.classList.remove('hidden');
         playlistForm.classList.add('hidden');
-        searchBtn.className = 'px-3 py-1 rounded-lg font-display font-bold text-xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center gap-1.5 transition';
-        playlistBtn.className = 'px-3 py-1 rounded-lg font-display font-bold text-xs bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-white/5 flex items-center gap-1.5 transition';
+        searchBtn.className = 'px-4 py-2 rounded-lg font-display font-bold text-sm bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center gap-2 transition active:scale-95';
+        playlistBtn.className = 'px-4 py-2 rounded-lg font-display font-bold text-sm bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-white/5 flex items-center gap-2 transition active:scale-95';
       } else {
         playlistForm.classList.remove('hidden');
         searchForm.classList.add('hidden');
-        playlistBtn.className = 'px-3 py-1 rounded-lg font-display font-bold text-xs bg-pink-500/20 text-pink-400 border border-pink-500/40 flex items-center gap-1.5 transition';
-        searchBtn.className = 'px-3 py-1 rounded-lg font-display font-bold text-xs bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-white/5 flex items-center gap-1.5 transition';
+        playlistBtn.className = 'px-4 py-2 rounded-lg font-display font-bold text-sm bg-pink-500/20 text-pink-400 border border-pink-500/40 flex items-center gap-2 transition active:scale-95';
+        searchBtn.className = 'px-4 py-2 rounded-lg font-display font-bold text-sm bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-white/5 flex items-center gap-2 transition active:scale-95';
       }
     }
 

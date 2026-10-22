@@ -312,29 +312,49 @@
 
   // SOLUCIÓN RAÍZ 2: Cuando SALIDA VIDEO está abierta en la TV, pausamos el dibujado visual
   // de los cuadritos de video de la Consola (dejando el audio al 100%) para que la PC solo dibuje 1 video
+  function ensureEcoBadge(deck) {
+    let b = document.getElementById(`deck${deck}-ecoOverlay`);
+    if (b) return b;
+    const p = document.getElementById(`player${deck}`);
+    if (!p || !p.parentElement) return null;
+    b = document.createElement('div');
+    b.id = `deck${deck}-ecoOverlay`;
+    b.className = 'hidden absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/90 p-3 text-center border border-' + (deck === 'A' ? 'cyan-500/30' : 'indigo-500/30') + ' rounded backdrop-blur-sm';
+    b.innerHTML = `<i class="fa-solid fa-tv text-${deck === 'A' ? 'cyan-400' : 'indigo-400'} text-2xl mb-1.5 animate-pulse"></i>
+      <span class="text-[11px] font-display font-bold text-${deck === 'A' ? 'cyan-300' : 'indigo-300'} tracking-wider">Reproduciendo video en Pantalla Externa</span>
+      <span class="text-[9px] font-mono text-neutral-400 mt-1">Audio sonando normal en consola (Ahorro GPU activo)</span>
+      <button onclick="toggleConsolePreviewOverride()" class="mt-2 px-2.5 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-[9px] font-mono text-${deck === 'A' ? 'cyan-300' : 'indigo-300'} border border-${deck === 'A' ? 'cyan-500/30' : 'indigo-500/30'} pointer-events-auto transition active:scale-95">
+        <i class="fa-regular fa-eye mr-1"></i>Ver miniatura local
+      </button>`;
+    p.parentElement.style.position = 'relative';
+    p.parentElement.appendChild(b);
+    return b;
+  }
+
   function updateStandbyDeckVisibility() {
     if (isDisplayMode) return;
 
     const pA = document.getElementById('playerA');
     const pB = document.getElementById('playerB');
-    const badgeA = document.getElementById('deckA-ecoOverlay');
-    const badgeB = document.getElementById('deckB-ecoOverlay');
+    const badgeA = document.getElementById('deckA-ecoOverlay') || ensureEcoBadge('A');
+    const badgeB = document.getElementById('deckB-ecoOverlay') || ensureEcoBadge('B');
 
-    if (!window.proModules.lowSpecMode) {
-      if (pA) pA.style.visibility = 'visible';
-      if (pB) pB.style.visibility = 'visible';
-      if (badgeA) badgeA.classList.add('hidden');
-      if (badgeB) badgeB.classList.add('hidden');
-      return;
-    }
-
-    // Si SALIDA VIDEO está activa en la otra ventana y no se forzó ver la miniatura local,
-    // ocultamos el renderizado gráfico de ambos iframes en la consola (el audio sigue sonando normal)
+    // REGLA 1: Si SALIDA VIDEO está activa en la TV y no se forzó ver miniatura local,
+    // ocultamos el dibujado visual en consola (audio sigue al 100%) ahorrando 50% GPU
     if (externalVideoOutputActive && !forceShowConsolePreviews) {
       if (pA) pA.style.visibility = 'hidden';
       if (pB) pB.style.visibility = 'hidden';
       if (badgeA) badgeA.classList.remove('hidden');
       if (badgeB) badgeB.classList.remove('hidden');
+      return;
+    }
+
+    if (badgeA) badgeA.classList.add('hidden');
+    if (badgeB) badgeB.classList.add('hidden');
+
+    if (!window.proModules.lowSpecMode) {
+      if (pA) pA.style.visibility = 'visible';
+      if (pB) pB.style.visibility = 'visible';
       return;
     }
 
@@ -586,7 +606,9 @@
     const activeVideoId = activeDeck === 'A' ? currentVideoIdA : currentVideoIdB;
     const livePlayer = activeDeck === 'A' ? playerA : playerB;
     const curSec = (livePlayer && livePlayer.getCurrentTime) ? Math.floor(livePlayer.getCurrentTime() || 0) : 0;
-    const url = `${window.location.origin}${window.location.pathname}?mode=display&type=${modeType}&vid=${activeVideoId}&t=${curSec}`;
+    const loc = window.location;
+    const basePath = loc.pathname.substring(0, loc.pathname.lastIndexOf('/') + 1);
+    const url = `${loc.origin}${basePath}salida.html?type=${modeType}&vid=${activeVideoId}&t=${curSec}`;
     const left = window.screen.width ? window.screen.width : 1366;
 
     // Usamos noopener para aislar el proceso de renderizado en otro núcleo del CPU
@@ -1087,6 +1109,9 @@
         if (d.action === 'requestSync') {
           broadcastProConfig();
           syncExternalScreen('updateLogo', { logo: logoData });
+        } else if (d.action === 'displayClosed') {
+          externalVideoOutputActive = false;
+          updateStandbyDeckVisibility();
         } else if (d.action === 'displayHeartbeat') {
           const wasActive = externalVideoOutputActive;
           externalVideoOutputActive = (d.mode === 'video');
@@ -1475,7 +1500,7 @@
       if (btnGroup && !btnGroup.querySelector('.btn-play-next')) {
         const btnTop = document.createElement('button');
         btnTop.type = 'button';
-        btnTop.className = 'btn-play-next px-1.5 py-0.5 bg-neutral-900 hover:bg-amber-950 text-[8px] font-mono text-amber-400 rounded border border-white/5';
+        btnTop.className = 'btn-play-next px-2 py-1 bg-neutral-900 hover:bg-amber-950 text-xs font-mono font-bold text-amber-400 rounded-lg border border-white/10 active:scale-95 transition';
         btnTop.title = 'Subir al 1º lugar (Play Next)';
         btnTop.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
         btnTop.onclick = () => window.moveQueueItemToTop(idx);
@@ -1641,84 +1666,55 @@
       logoModalGrid.appendChild(btnBtmCenter);
     }
 
-    // C) Barra de Módulos + Fondo y Color de Pantalla + Panel MENSAJE TV con Slider (10% a 100%) + Sesiones
+    // C) ESTACIÓN INFERIOR: SALIDA TV (VIDEO / SIN VIDEO) + MÓDULOS PRO + MENSAJE TV + SESIONES (SIN FONDO)
     const mainRoot = document.getElementById('main-dj-root');
-    const mainWorkstation = mainRoot ? mainRoot.querySelector('main') : null;
-    if (!mainRoot || !mainWorkstation) return;
-
-    const bgPresets = [
-      { name: 'Negro Puro', hex: '#000000' },
-      { name: 'Azul Noche', hex: '#07142b' },
-      { name: 'Violeta Club', hex: '#18072c' },
-      { name: 'Rojo Carmesí', hex: '#2a060d' },
-      { name: 'Esmeralda', hex: '#04221b' },
-      { name: 'Dorado Dark', hex: '#241905' },
-      { name: 'Gris Grafito', hex: '#181b24' }
-    ];
+    if (!mainRoot) return;
 
     const proBar = document.createElement('div');
     proBar.id = 'moodj-pro-modules-bar';
-    proBar.className = 'w-full max-w-[1680px] mx-auto mb-2.5 flex flex-col gap-2';
+    proBar.className = 'w-full max-w-[1680px] mx-auto mt-4 mb-3 flex flex-col gap-2.5';
     proBar.innerHTML = `
-      <!-- INTERRUPTORES DE MÓDULOS (ON/OFF) -->
-      <div class="dj-panel rounded-xl p-2 px-3 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-2 text-xs font-display font-bold text-cyan-400">
-          <i class="fa-solid fa-bolt"></i>
-          <span>MÓDULOS PRO Y RENDIMIENTO:</span>
-        </div>
-        <div id="proModuleTogglesContainer" class="flex flex-wrap items-center gap-1.5"></div>
-      </div>
-
-      <!-- PANEL DE FONDO Y COLOR DE LA PANTALLA -->
-      <div id="proBackgroundPanel" class="dj-panel rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2.5">
+      <!-- FILA 1: BOTONES DE SALIDA TV (CON VIDEO / SIN VIDEO) + MÓDULOS PRO Y RENDIMIENTO -->
+      <div class="dj-panel rounded-xl p-2.5 px-3 flex flex-wrap items-center justify-between gap-3 border border-white/5 shadow-xl">
+        <!-- CONTROL DE SALIDA PANTALLA EXTERNA -->
         <div class="flex flex-wrap items-center gap-2">
-          <span class="text-[10px] font-display font-bold text-pink-400 whitespace-nowrap">
-            <i class="fa-solid fa-palette mr-1"></i>FONDO Y COLOR DE PANTALLA:
-          </span>
-          <div class="flex items-center gap-1.5 bg-neutral-950 px-2.5 py-1 rounded-lg border border-white/10">
-            <label for="screenBgColorPicker" class="text-[10px] font-mono text-neutral-300 cursor-pointer">Color:</label>
-            <input id="screenBgColorPicker" type="color" value="${window.bgConfig.color || '#000000'}"
-                   oninput="setScreenBgColor(this.value)"
-                   class="w-6 h-5 rounded cursor-pointer bg-transparent border-0">
-            <div class="flex items-center gap-1 ml-1">
-              ${bgPresets.map(p => `
-                <button type="button" onclick="setScreenBgColor('${p.hex}')" title="${p.name}"
-                        style="background-color:${p.hex}"
-                        class="w-4 h-4 rounded-full border border-white/30 hover:scale-110 transition"></button>
-              `).join('')}
-            </div>
+          <div class="flex items-center gap-1.5 text-xs font-display font-black text-amber-300 mr-1">
+            <i class="fa-solid fa-tv text-amber-400 text-sm"></i>
+            <span>SALIDA EXTERNA:</span>
           </div>
+          <button type="button" onclick="openExternalDisplay('video')"
+                  class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-500 hover:to-cyan-600 text-white font-display font-bold text-xs tracking-wider shadow-md shadow-cyan-600/20 active:scale-95 transition flex items-center gap-2">
+            <i class="fa-solid fa-film text-cyan-200"></i>
+            <span>SALIDA VIDEO</span>
+          </button>
+          <button type="button" onclick="openExternalDisplay('ambient')"
+                  class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-display font-bold text-xs tracking-wider shadow-md shadow-red-600/20 active:scale-95 transition flex items-center gap-2">
+            <i class="fa-solid fa-heart-pulse text-red-200"></i>
+            <span>SALIDA SIN VIDEO</span>
+          </button>
         </div>
 
+        <div class="hidden sm:block h-6 w-px bg-white/10"></div>
+
+        <!-- INTERRUPTORES DE MÓDULOS PRO Y RENDIMIENTO -->
         <div class="flex flex-wrap items-center gap-2">
-          <input type="file" id="screenBgImageInput" accept="image/*" class="hidden" onchange="handleScreenBgImageUpload(event)">
-          <button type="button" onclick="document.getElementById('screenBgImageInput').click()"
-                  class="px-2.5 py-1 rounded bg-pink-600/20 hover:bg-pink-600 text-pink-300 hover:text-white border border-pink-500/40 font-display font-bold text-[10px] transition flex items-center gap-1">
-            <i class="fa-solid fa-image"></i> SUBIR IMAGEN FONDO
-          </button>
-          <button type="button" onclick="clearScreenBgImage()"
-                  class="px-2.5 py-1 rounded bg-neutral-900 hover:bg-red-950 text-neutral-400 hover:text-red-300 border border-white/10 font-mono text-[10px] transition">
-            QUITAR IMAGEN
-          </button>
-          <div class="flex items-center gap-1.5 bg-neutral-950 px-2.5 py-1 rounded-lg border border-white/10" title="Opacidad de la imagen de fondo">
-            <span class="text-[9px] font-mono text-neutral-400">OPACIDAD FONDO:</span>
-            <input id="screenBgOpacitySlider" type="range" min="10" max="100" step="5" value="${window.bgConfig.imageOpacity || 60}"
-                   oninput="updateScreenBgOpacity(this.value)" class="w-16 accent-pink-500 cursor-pointer">
-            <span id="screenBgOpacityDisplay" class="text-[10px] font-mono text-pink-400 font-bold w-8 text-right">${window.bgConfig.imageOpacity || 60}%</span>
+          <div class="flex items-center gap-1.5 text-xs font-display font-bold text-cyan-400">
+            <i class="fa-solid fa-bolt text-yellow-400"></i>
+            <span>MÓDULOS PRO Y RENDIMIENTO:</span>
           </div>
-          <button id="btnBgApplyConsole" type="button" onclick="toggleBgApplyToConsole()"
-                  class="px-2.5 py-1 rounded bg-neutral-900 hover:bg-neutral-800 text-cyan-300 border border-cyan-500/30 font-mono font-bold text-[10px] transition">
-            ${window.bgConfig.applyToConsole ? 'APLICAR EN: TV + CONSOLA' : 'APLICAR EN: SOLO TV'}
-          </button>
+          <div id="proModuleTogglesContainer" class="flex flex-wrap items-center gap-1.5"></div>
         </div>
       </div>
 
-      <!-- PANEL MENSAJE TV CON SLIDER DE TAMAÑO EN PORCENTAJE (10% A 100%) -->
-      <div id="proPromoPanel" class="dj-panel rounded-xl p-2.5 flex flex-wrap items-center gap-2.5">
-        <span class="text-[10px] font-display font-bold text-amber-400 whitespace-nowrap">
-          <i class="fa-solid fa-bullhorn mr-1"></i>MENSAJE TV <span id="tvTickerLabelPct">(${window.tickerSizePercent}% PANTALLA)</span>:
+      <!-- FILA 2: PANEL MENSAJE TV PANTALLA CON SLIDER DE TAMAÑO (10% A 100%) -->
+      <div id="proPromoPanel" class="dj-panel rounded-xl p-2.5 px-3 flex flex-wrap items-center gap-2.5 border border-white/5 shadow-xl">
+        <span class="text-[10px] font-display font-bold text-amber-400 whitespace-nowrap flex items-center gap-1.5">
+          <i class="fa-solid fa-bullhorn text-amber-300"></i>
+          <span>MENSAJE TV PANTALLA <span id="tvTickerLabelPct" class="text-amber-200 font-mono">(${window.tickerSizePercent}% PANTALLA)</span>:</span>
         </span>
-        <input id="tvTickerInput" type="text" class="flex-1 min-w-[200px] bg-neutral-950 border border-neutral-800 rounded px-3 py-1.5 text-xs text-neutral-100 font-mono outline-none focus:border-amber-400" placeholder="Escribe anuncio o promo para la pantalla externa...">
+        <input id="tvTickerInput" type="text"
+               class="flex-1 min-w-[200px] bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-neutral-100 font-mono outline-none focus:border-amber-400 transition"
+               placeholder="Escribe anuncio, promo o mensaje para proyectar en la pantalla externa...">
 
         <div class="flex items-center gap-2 bg-neutral-950/90 px-3 py-1.5 rounded-lg border border-amber-500/30" title="Ajusta el tamaño que ocupa la barra de Mensaje TV en la pantalla (10% a 100%)">
           <span class="text-[10px] font-mono text-amber-300 font-bold whitespace-nowrap">TAMAÑO:</span>
@@ -1728,35 +1724,57 @@
           <span id="tvTickerSizeDisplay" class="text-xs font-mono font-black text-amber-400 w-10 text-right">${window.tickerSizePercent}%</span>
         </div>
 
-        <button type="button" onclick="sendTickerToTv()" class="px-3 py-1.5 rounded bg-amber-500 hover:bg-amber-400 text-black font-display font-bold text-[10px] transition">MOSTRAR MENSAJE EN TV</button>
-        <button type="button" onclick="hideTickerFromTv()" class="px-3 py-1.5 rounded bg-neutral-800 hover:bg-red-900/70 text-neutral-300 hover:text-red-200 border border-white/10 font-display font-bold text-[10px] transition">OCULTAR MENSAJE</button>
-        <button type="button" onclick="triggerBannerNow()" class="px-3 py-1.5 rounded bg-cyan-950 hover:bg-cyan-500 text-cyan-300 hover:text-black border border-cyan-500/30 font-display font-bold text-[10px] transition" title="Mostrar tarjeta de canción actual en TV">MOSTRAR CANCIÓN EN TV</button>
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button type="button" onclick="sendTickerToTv()" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-display font-bold text-[10px] active:scale-95 transition shadow">
+            <i class="fa-solid fa-paper-plane mr-1"></i>MOSTRAR MENSAJE EN TV
+          </button>
+          <button type="button" onclick="hideTickerFromTv()" class="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-red-950 text-neutral-300 hover:text-red-300 border border-white/10 font-display font-bold text-[10px] active:scale-95 transition">
+            <i class="fa-solid fa-eye-slash mr-1"></i>OCULTAR MENSAJE
+          </button>
+          <button type="button" onclick="triggerBannerNow()" class="px-3 py-1.5 rounded-lg bg-cyan-950 hover:bg-cyan-500 text-cyan-300 hover:text-black border border-cyan-500/30 font-display font-bold text-[10px] active:scale-95 transition" title="Mostrar tarjeta de canción actual en TV">
+            <i class="fa-solid fa-compact-disc mr-1"></i>MOSTRAR CANCIÓN EN TV
+          </button>
+        </div>
       </div>
 
-      <!-- PANEL DE SESIONES GUARDADAS E HISTORIAL -->
-      <div id="proSessionsPanel" class="dj-panel rounded-xl p-2.5 grid grid-cols-1 lg:grid-cols-12 gap-2.5">
-        <div class="lg:col-span-6 flex flex-col gap-1.5 border-b lg:border-b-0 lg:border-r border-white/10 pb-2 lg:pb-0 lg:pr-3">
+      <!-- FILA 3: PANEL GUARDAR / CARGAR SESIONES DE COLA E HISTORIAL -->
+      <div id="proSessionsPanel" class="dj-panel rounded-xl p-2.5 px-3 grid grid-cols-1 lg:grid-cols-12 gap-3 border border-white/5 shadow-xl">
+        <div class="lg:col-span-6 flex flex-col gap-1.5 border-b lg:border-b-0 lg:border-r border-white/10 pb-2.5 lg:pb-0 lg:pr-3">
           <div class="flex items-center justify-between">
-            <span class="text-[10px] font-display font-bold text-emerald-400"><i class="fa-solid fa-folder-plus mr-1"></i>GUARDAR / CARGAR SESIONES DE COLA</span>
-            <div class="flex gap-1">
-              <input id="sessionNameInput" type="text" placeholder="Nombre (ej. Hora Pico)" class="bg-neutral-950 border border-neutral-800 rounded px-2 py-0.5 text-[10px] text-white font-mono outline-none">
-              <button type="button" onclick="saveCurrentSession()" class="px-2 py-0.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-[10px] rounded font-mono">Guardar Cola</button>
+            <span class="text-[10px] font-display font-bold text-emerald-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-folder-plus text-emerald-300"></i>
+              <span>GUARDAR / CARGAR SESIONES DE COLA</span>
+            </span>
+            <div class="flex gap-1.5">
+              <input id="sessionNameInput" type="text" placeholder="Nombre (ej. Set Noche)"
+                     class="bg-neutral-950 border border-neutral-800 rounded-lg px-2.5 py-1 text-[10px] text-white font-mono outline-none focus:border-emerald-500">
+              <button type="button" onclick="saveCurrentSession()"
+                      class="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-[10px] rounded-lg font-mono active:scale-95 transition">
+                Guardar Cola
+              </button>
             </div>
           </div>
           <div id="savedSessionsContainer" class="flex flex-wrap gap-1.5 max-h-16 overflow-y-auto"></div>
         </div>
 
-        <div class="lg:col-span-6 flex flex-col gap-1">
+        <div class="lg:col-span-6 flex flex-col gap-1.5">
           <div class="flex items-center justify-between">
-            <span class="text-[10px] font-display font-bold text-indigo-400"><i class="fa-solid fa-clock-rotate-left mr-1"></i>HISTORIAL RECIENTE EN VIVO</span>
-            <button type="button" onclick="window.playHistory=[];localStorage.removeItem('moodj_pro_history');renderHistoryList();" class="text-[9px] font-mono text-neutral-500 hover:text-red-400">Limpiar historial</button>
+            <span class="text-[10px] font-display font-bold text-indigo-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-clock-rotate-left text-indigo-300"></i>
+              <span>HISTORIAL RECIENTE EN VIVO</span>
+            </span>
+            <button type="button" onclick="window.playHistory=[];localStorage.removeItem('moodj_pro_history');renderHistoryList();"
+                    class="text-[9px] font-mono text-neutral-500 hover:text-red-400 transition">
+              <i class="fa-solid fa-trash mr-1"></i>Limpiar historial
+            </button>
           </div>
           <div id="playHistoryContainer" class="flex gap-1.5 overflow-x-auto py-0.5 text-[10px] font-mono"></div>
         </div>
       </div>
     `;
 
-    mainRoot.insertBefore(proBar, mainWorkstation);
+    // Insertar en la parte INFERIOR de la consola (después de búsqueda y cola)
+    mainRoot.appendChild(proBar);
     const tickerInput = document.getElementById('tvTickerInput');
     if (tickerInput) tickerInput.value = window.tickerMessage;
 
